@@ -167,6 +167,9 @@ export default function Home() {
             <h1 className="mt-2 text-3xl font-bold leading-tight sm:text-4xl">
               欲しいもの管理
             </h1>
+            <p className="mt-2 text-sm font-medium leading-6 text-zinc-600 sm:text-base">
+              気になるものをまとめて管理
+            </p>
           </div>
 
           <div className="grid grid-cols-3 gap-2 rounded-lg border border-zinc-200 bg-white p-2 shadow-sm sm:w-[360px]">
