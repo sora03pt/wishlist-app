@@ -4,6 +4,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 type Todo = {
   id: string | number;
   title: string;
+  price: number | null;
+  url: string | null;
+  memo: string | null;
+  category: string | null;
   completed: boolean;
   created_at: string;
 };
