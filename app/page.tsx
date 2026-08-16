@@ -10,31 +10,102 @@ type Todo = {
   created_at: string;
 };
 
+type GetStatus = "idle" | "initial" | "refreshing";
+
+function isTodoRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function normalizeTodo(value: unknown): Todo | null {
+  if (!isTodoRecord(value)) {
+    return null;
+  }
+
+  const { id, title, completed, created_at: createdAt } = value;
+
+  if (
+    (typeof id !== "number" && typeof id !== "string") ||
+    typeof title !== "string" ||
+    typeof createdAt !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    completed: completed === true,
+    created_at: createdAt,
+    id,
+    title,
+  };
+}
+
+function getApiErrorMessage(value: unknown, fallbackMessage: string) {
+  if (
+    isTodoRecord(value) &&
+    "error" in value &&
+    typeof value.error === "string"
+  ) {
+    return value.error;
+  }
+
+  return fallbackMessage;
+}
+
+async function readJsonResponse(
+  response: Response,
+  fallbackMessage: string,
+): Promise<unknown> {
+  let result: unknown = null;
+
+  try {
+    result = await response.json();
+  } catch {
+    if (!response.ok) {
+      throw new Error(fallbackMessage);
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(result, fallbackMessage));
+  }
+
+  return result;
+}
+
 async function requestTodos() {
   const response = await fetch("/api/todos", {
     cache: "no-store",
   });
 
-  const result = await response.json();
+  const result = await readJsonResponse(
+    response,
+    "TODOの取得に失敗しました。",
+  );
 
-  if (!response.ok) {
-    throw new Error(result.error ?? "TODOの取得に失敗しました。");
-  }
-
-  return Array.isArray(result) ? (result as Todo[]) : [];
+  return Array.isArray(result)
+    ? result.flatMap((value) => {
+        const todo = normalizeTodo(value);
+        return todo ? [todo] : [];
+      })
+    : [];
 }
 
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [title, setTitle] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [getStatus, setGetStatus] = useState<GetStatus>("initial");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<Todo["id"] | null>(null);
   const [updatingId, setUpdatingId] = useState<Todo["id"] | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const trimmedTitle = title.trim();
+  const isInitialLoading = getStatus === "initial";
+  const isRefreshing = getStatus === "refreshing";
+  const hasTodoMutation = deletingId !== null || updatingId !== null;
+  const canSubmit = trimmedTitle.length > 0 && !isSubmitting;
 
   const fetchTodos = useCallback(async () => {
-    setIsLoading(true);
+    setGetStatus("refreshing");
     setErrorMessage("");
 
     try {
@@ -44,7 +115,7 @@ export default function Home() {
         error instanceof Error ? error.message : "TODOの取得に失敗しました。",
       );
     } finally {
-      setIsLoading(false);
+      setGetStatus("idle");
     }
   }, []);
 
@@ -68,7 +139,7 @@ export default function Home() {
         }
       } finally {
         if (isActive) {
-          setIsLoading(false);
+          setGetStatus("idle");
         }
       }
     }
@@ -83,9 +154,11 @@ export default function Home() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const nextTitle = title.trim();
+    if (isSubmitting) {
+      return;
+    }
 
-    if (!nextTitle) {
+    if (!trimmedTitle) {
       setErrorMessage("titleを入力してください。");
       return;
     }
@@ -95,18 +168,14 @@ export default function Home() {
 
     try {
       const response = await fetch("/api/todos", {
-        body: JSON.stringify({ title: nextTitle }),
+        body: JSON.stringify({ title: trimmedTitle }),
         headers: {
           "Content-Type": "application/json",
         },
         method: "POST",
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error ?? "TODOの登録に失敗しました。");
-      }
+      await readJsonResponse(response, "TODOの登録に失敗しました。");
 
       setTitle("");
       await fetchTodos();
@@ -120,6 +189,10 @@ export default function Home() {
   }
 
   async function handleDelete(todoId: Todo["id"]) {
+    if (deletingId !== null || updatingId !== null) {
+      return;
+    }
+
     setDeletingId(todoId);
     setErrorMessage("");
 
@@ -131,11 +204,7 @@ export default function Home() {
         },
       );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error ?? "TODOの削除に失敗しました。");
-      }
+      await readJsonResponse(response, "TODOの削除に失敗しました。");
 
       await fetchTodos();
     } catch (error) {
@@ -148,6 +217,10 @@ export default function Home() {
   }
 
   async function handleComplete(todoId: Todo["id"]) {
+    if (deletingId !== null || updatingId !== null) {
+      return;
+    }
+
     setUpdatingId(todoId);
     setErrorMessage("");
 
@@ -163,11 +236,7 @@ export default function Home() {
         },
       );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error ?? "TODOの更新に失敗しました。");
-      }
+      await readJsonResponse(response, "TODOの更新に失敗しました。");
 
       await fetchTodos();
     } catch (error) {
@@ -218,7 +287,7 @@ export default function Home() {
 
           <button
             className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-base font-bold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
-            disabled={isSubmitting}
+            disabled={!canSubmit}
             type="submit"
           >
             {isSubmitting ? (
@@ -232,35 +301,47 @@ export default function Home() {
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-bold">TODO一覧</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold">TODO一覧</h2>
+              {isRefreshing ? (
+                <span className="text-xs font-bold text-zinc-500">
+                  再取得中
+                </span>
+              ) : null}
+            </div>
             <button
               aria-label="TODOを再取得"
               className="inline-flex size-10 items-center justify-center rounded-md border border-zinc-200 text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:text-zinc-400"
               disabled={
-                isLoading ||
+                isInitialLoading ||
+                isRefreshing ||
                 isSubmitting ||
-                deletingId !== null ||
-                updatingId !== null
+                hasTodoMutation
               }
               onClick={() => void fetchTodos()}
-              title="再取得"
+              title={isRefreshing ? "再取得中" : "再取得"}
               type="button"
             >
               <RefreshCw
-                className={isLoading ? "animate-spin" : undefined}
+                className={
+                  isInitialLoading || isRefreshing ? "animate-spin" : undefined
+                }
                 size={18}
               />
             </button>
           </div>
 
           {errorMessage ? (
-            <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-3 text-sm font-medium leading-6 text-rose-700">
+            <div
+              className="mt-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-3 text-sm font-medium leading-6 text-rose-700"
+              role="alert"
+            >
               {errorMessage}
             </div>
           ) : null}
 
           <div className="mt-4 grid gap-3">
-            {isLoading ? (
+            {isInitialLoading ? (
               <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-300 px-4 py-10 text-sm font-bold text-zinc-500">
                 <Loader2 className="animate-spin" size={18} />
                 読み込み中
@@ -273,6 +354,7 @@ export default function Home() {
                   onComplete={handleComplete}
                   onDelete={handleDelete}
                   todo={todo}
+                  todoActionDisabled={hasTodoMutation}
                   updatingId={updatingId}
                 />
               ))
@@ -293,17 +375,19 @@ function TodoCard({
   onComplete,
   onDelete,
   todo,
+  todoActionDisabled,
   updatingId,
 }: {
   deletingId: Todo["id"] | null;
   onComplete: (todoId: Todo["id"]) => void;
   onDelete: (todoId: Todo["id"]) => void;
   todo: Todo;
+  todoActionDisabled: boolean;
   updatingId: Todo["id"] | null;
 }) {
   const isDeleting = deletingId === todo.id;
   const isUpdating = updatingId === todo.id;
-  const isBusy = deletingId !== null || updatingId !== null;
+  const isBusy = todoActionDisabled || isDeleting || isUpdating;
 
   return (
     <article className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
