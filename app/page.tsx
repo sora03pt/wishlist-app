@@ -1,11 +1,12 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Loader2, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Check, Loader2, Plus, RefreshCw, Trash2 } from "lucide-react";
 
 type Todo = {
   id: number | string;
   title: string;
+  completed: boolean;
   created_at: string;
 };
 
@@ -29,6 +30,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<Todo["id"] | null>(null);
+  const [updatingId, setUpdatingId] = useState<Todo["id"] | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const fetchTodos = useCallback(async () => {
@@ -145,6 +147,38 @@ export default function Home() {
     }
   }
 
+  async function handleComplete(todoId: Todo["id"]) {
+    setUpdatingId(todoId);
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(
+        `/api/todos/${encodeURIComponent(String(todoId))}`,
+        {
+          body: JSON.stringify({ completed: true }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: "PATCH",
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error ?? "TODOの更新に失敗しました。");
+      }
+
+      await fetchTodos();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "TODOの更新に失敗しました。",
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f6f8fb] text-zinc-950">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-5 sm:px-6 lg:py-8">
@@ -202,7 +236,12 @@ export default function Home() {
             <button
               aria-label="TODOを再取得"
               className="inline-flex size-10 items-center justify-center rounded-md border border-zinc-200 text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:text-zinc-400"
-              disabled={isLoading || isSubmitting || deletingId !== null}
+              disabled={
+                isLoading ||
+                isSubmitting ||
+                deletingId !== null ||
+                updatingId !== null
+              }
               onClick={() => void fetchTodos()}
               title="再取得"
               type="button"
@@ -231,8 +270,10 @@ export default function Home() {
                 <TodoCard
                   deletingId={deletingId}
                   key={todo.id}
+                  onComplete={handleComplete}
                   onDelete={handleDelete}
                   todo={todo}
+                  updatingId={updatingId}
                 />
               ))
             ) : (
@@ -249,40 +290,70 @@ export default function Home() {
 
 function TodoCard({
   deletingId,
+  onComplete,
   onDelete,
   todo,
+  updatingId,
 }: {
   deletingId: Todo["id"] | null;
+  onComplete: (todoId: Todo["id"]) => void;
   onDelete: (todoId: Todo["id"]) => void;
   todo: Todo;
+  updatingId: Todo["id"] | null;
 }) {
   const isDeleting = deletingId === todo.id;
+  const isUpdating = updatingId === todo.id;
+  const isBusy = deletingId !== null || updatingId !== null;
 
   return (
     <article className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h3 className="break-words text-base font-bold leading-7 text-zinc-950">
+          <span
+            className={`inline-flex h-7 items-center rounded-md px-2 text-xs font-bold ${
+              todo.completed
+                ? "bg-emerald-100 text-emerald-800"
+                : "bg-amber-100 text-amber-800"
+            }`}
+          >
+            {todo.completed ? "完了" : "未完了"}
+          </span>
+          <h3 className="mt-2 break-words text-base font-bold leading-7 text-zinc-950">
             {todo.title}
           </h3>
           <p className="mt-2 text-xs font-medium text-zinc-500">
             {formatCreatedAt(todo.created_at)}
           </p>
         </div>
-        <button
-          aria-label={`${todo.title}を削除`}
-          className="inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-rose-200 text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:text-zinc-400 disabled:hover:bg-transparent"
-          disabled={deletingId !== null}
-          onClick={() => onDelete(todo.id)}
-          title="削除"
-          type="button"
-        >
-          {isDeleting ? (
-            <Loader2 className="animate-spin" size={17} />
-          ) : (
-            <Trash2 size={17} />
-          )}
-        </button>
+        <div className="grid grid-cols-[1fr_auto] gap-2 sm:flex sm:shrink-0 sm:items-center">
+          <button
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-white px-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:text-zinc-400 disabled:hover:bg-white"
+            disabled={todo.completed || isBusy}
+            onClick={() => onComplete(todo.id)}
+            type="button"
+          >
+            {isUpdating ? (
+              <Loader2 className="animate-spin" size={17} />
+            ) : (
+              <Check size={17} />
+            )}
+            {todo.completed ? "完了済み" : "完了にする"}
+          </button>
+          <button
+            aria-label={`${todo.title}を削除`}
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-rose-200 text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:text-zinc-400 disabled:hover:bg-transparent"
+            disabled={isBusy}
+            onClick={() => onDelete(todo.id)}
+            title="削除"
+            type="button"
+          >
+            {isDeleting ? (
+              <Loader2 className="animate-spin" size={17} />
+            ) : (
+              <Trash2 size={17} />
+            )}
+          </button>
+        </div>
       </div>
     </article>
   );
