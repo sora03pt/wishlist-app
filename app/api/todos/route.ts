@@ -6,8 +6,10 @@ type Todo = {
   title: string;
   price: number | null;
   url: string | null;
+  image_url: string | null;
   memo: string | null;
   category: string | null;
+  desire_level: number | null;
   completed: boolean;
   created_at: string;
 };
@@ -35,6 +37,22 @@ function readOptionalPrice(body: Record<string, unknown>) {
   }
 
   return price;
+}
+
+function readOptionalDesireLevel(body: Record<string, unknown>) {
+  const value = body.desire_level;
+
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const desireLevel = typeof value === "number" ? value : Number(value);
+
+  if (!Number.isInteger(desireLevel) || desireLevel < 1 || desireLevel > 5) {
+    return undefined;
+  }
+
+  return desireLevel;
 }
 
 export async function GET() {
@@ -66,7 +84,9 @@ export async function POST(request: Request) {
 
   const title = readStringField(body, "title");
   const price = readOptionalPrice(body);
+  const desireLevel = readOptionalDesireLevel(body);
   const url = readStringField(body, "url");
+  const imageUrl = readStringField(body, "image_url");
   const memo = readStringField(body, "memo");
   const category = readStringField(body, "category");
 
@@ -81,12 +101,21 @@ export async function POST(request: Request) {
     );
   }
 
+  if (desireLevel === undefined) {
+    return NextResponse.json(
+      { error: "desire_level must be an integer between 1 and 5." },
+      { status: 400 },
+    );
+  }
+
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("todos")
     .insert({
       category: category || null,
       completed: false,
+      desire_level: desireLevel,
+      image_url: imageUrl || null,
       memo: memo || null,
       price,
       title,
