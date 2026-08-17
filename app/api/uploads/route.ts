@@ -90,5 +90,8 @@ export async function POST(request: Request) {
 
   const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
 
-  return NextResponse.json({ image_url: data.publicUrl }, { status: 201 });
+  return NextResponse.json(
+    { image_path: filePath, image_url: data.publicUrl },
+    { status: 201 },
+  );
 }

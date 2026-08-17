@@ -7,6 +7,7 @@ type Todo = {
   price: number | null;
   url: string | null;
   image_url: string | null;
+  image_path: string | null;
   memo: string | null;
   category: string | null;
   desire_level: number | null;
@@ -25,6 +26,7 @@ type TodoUpdate = {
   price?: number | null;
   url?: string | null;
   image_url?: string | null;
+  image_path?: string | null;
   memo?: string | null;
   category?: string | null;
   desire_level?: number | null;
@@ -116,6 +118,7 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
   const title = readOptionalTextUpdate(body, "title");
   const url = readOptionalTextUpdate(body, "url");
   const imageUrl = readOptionalTextUpdate(body, "image_url");
+  const imagePath = readOptionalTextUpdate(body, "image_path");
   const memo = readOptionalTextUpdate(body, "memo");
   const category = readOptionalTextUpdate(body, "category");
   const price = readOptionalPriceUpdate(body);
@@ -129,6 +132,7 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
     title === null ||
     url === null ||
     imageUrl === null ||
+    imagePath === null ||
     memo === null ||
     category === null
   ) {
@@ -148,6 +152,10 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
 
   if (typeof imageUrl === "string") {
     updates.image_url = imageUrl || null;
+  }
+
+  if (typeof imagePath === "string") {
+    updates.image_path = imagePath || null;
   }
 
   if (typeof memo === "string") {

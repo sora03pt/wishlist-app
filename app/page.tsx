@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   ChangeEvent,
   DragEvent,
@@ -45,6 +46,7 @@ type WishlistItem = {
   price: number | null;
   url: string | null;
   image_url: string | null;
+  image_path: string | null;
   memo: string | null;
   category: string | null;
   desire_level: number | null;
@@ -57,6 +59,7 @@ type WishlistForm = {
   price: string;
   url: string;
   imageUrl: string;
+  imagePath: string;
   category: string;
   desireLevel: number;
   memo: string;
@@ -67,6 +70,7 @@ type GetStatus = "idle" | "initial" | "refreshing";
 const initialForm: WishlistForm = {
   category: "",
   desireLevel: 3,
+  imagePath: "",
   imageUrl: "",
   memo: "",
   price: "",
@@ -104,6 +108,7 @@ function normalizeWishlistItem(value: unknown): WishlistItem | null {
     price,
     url,
     image_url: imageUrl,
+    image_path: imagePath,
     memo,
     category,
     desire_level: desireLevel,
@@ -141,6 +146,7 @@ function normalizeWishlistItem(value: unknown): WishlistItem | null {
         ? null
         : normalizedDesireLevel,
     id,
+    image_path: typeof imagePath === "string" ? imagePath : null,
     image_url: typeof imageUrl === "string" ? imageUrl : null,
     memo: typeof memo === "string" ? memo : null,
     price:
@@ -260,8 +266,13 @@ function formatCreatedAt(createdAt: string) {
 }
 
 const maxSourceImageSize = 20 * 1024 * 1024;
-const optimizedImageSize = 1200;
-const optimizedImageQuality = 0.82;
+const optimizedImageMaxDimension = 1200;
+const optimizedImageQuality = 0.85;
+
+type UploadedWishlistImage = {
+  imagePath: string;
+  imageUrl: string;
+};
 
 function getOptimizedImageFileName(fileName: string) {
   const baseName = fileName.replace(/\.[^.]+$/, "").trim() || "wishlist-image";
@@ -293,7 +304,7 @@ function createImageBlobFromCanvas(
 function loadImageElement(file: File) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
+    const image = document.createElement("img");
 
     image.onload = () => {
       URL.revokeObjectURL(objectUrl);
@@ -309,15 +320,19 @@ function loadImageElement(file: File) {
 
 async function optimizeWishlistImage(file: File) {
   const image = await loadImageElement(file);
-  const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+  const sourceWidth = image.naturalWidth;
+  const sourceHeight = image.naturalHeight;
 
-  if (sourceSize <= 0) {
+  if (sourceWidth <= 0 || sourceHeight <= 0) {
     throw new Error("画像を読み込めませんでした。");
   }
 
-  const canvasSize = Math.min(sourceSize, optimizedImageSize);
-  const sourceX = Math.floor((image.naturalWidth - sourceSize) / 2);
-  const sourceY = Math.floor((image.naturalHeight - sourceSize) / 2);
+  const scale = Math.min(
+    1,
+    optimizedImageMaxDimension / Math.max(sourceWidth, sourceHeight),
+  );
+  const canvasWidth = Math.round(sourceWidth * scale);
+  const canvasHeight = Math.round(sourceHeight * scale);
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
 
@@ -325,19 +340,9 @@ async function optimizeWishlistImage(file: File) {
     throw new Error("画像の変換に失敗しました。");
   }
 
-  canvas.width = canvasSize;
-  canvas.height = canvasSize;
-  context.drawImage(
-    image,
-    sourceX,
-    sourceY,
-    sourceSize,
-    sourceSize,
-    0,
-    0,
-    canvasSize,
-    canvasSize,
-  );
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+  context.drawImage(image, 0, 0, sourceWidth, sourceHeight, 0, 0, canvasWidth, canvasHeight);
 
   const blob = await createImageBlobFromCanvas(
     canvas,
@@ -367,9 +372,14 @@ async function uploadWishlistImage(file: File) {
   if (
     isRecord(result) &&
     "image_url" in result &&
-    typeof result.image_url === "string"
+    typeof result.image_url === "string" &&
+    "image_path" in result &&
+    typeof result.image_path === "string"
   ) {
-    return result.image_url;
+    return {
+      imagePath: result.image_path,
+      imageUrl: result.image_url,
+    } satisfies UploadedWishlistImage;
   }
 
   throw new Error("画像のアップロードに失敗しました。");
@@ -379,6 +389,7 @@ function createWishlistFormFromItem(item: WishlistItem): WishlistForm {
   return {
     category: item.category ?? "",
     desireLevel: item.desire_level ?? 3,
+    imagePath: item.image_path ?? "",
     imageUrl: item.image_url ?? "",
     memo: item.memo ?? "",
     price: item.price === null ? "" : String(item.price),
@@ -521,12 +532,14 @@ export default function Home() {
   function clearImagePreview() {
     setImageFile(null);
     setImagePreviewUrl("");
+    updateForm("imagePath", "");
     updateForm("imageUrl", "");
   }
 
   function clearEditImagePreview() {
     setEditImageFile(null);
     setEditImagePreviewUrl("");
+    updateEditForm("imagePath", "");
     updateEditForm("imageUrl", "");
   }
 
@@ -561,12 +574,14 @@ export default function Home() {
     if (mode === "create") {
       setImageFile(optimizedFile);
       setImagePreviewUrl(previewUrl);
+      updateForm("imagePath", "");
       updateForm("imageUrl", "");
       return;
     }
 
     setEditImageFile(optimizedFile);
     setEditImagePreviewUrl(previewUrl);
+    updateEditForm("imagePath", "");
     updateEditForm("imageUrl", "");
   }
 
@@ -611,16 +626,20 @@ export default function Home() {
 
     try {
       let imageUrl = form.imageUrl;
+      let imagePath = form.imagePath;
 
       if (imageFile) {
         setUploadingImageId("new");
-        imageUrl = await uploadWishlistImage(imageFile);
+        const uploadedImage = await uploadWishlistImage(imageFile);
+        imagePath = uploadedImage.imagePath;
+        imageUrl = uploadedImage.imageUrl;
       }
 
       const response = await fetch("/api/todos", {
         body: JSON.stringify({
           category: form.category.trim(),
           desire_level: desireLevel,
+          image_path: imagePath,
           image_url: imageUrl,
           memo: form.memo.trim(),
           price: form.price.trim(),
@@ -730,10 +749,13 @@ export default function Home() {
 
     try {
       let imageUrl = editForm.imageUrl;
+      let imagePath = editForm.imagePath;
 
       if (editImageFile) {
         setUploadingImageId(editingId);
-        imageUrl = await uploadWishlistImage(editImageFile);
+        const uploadedImage = await uploadWishlistImage(editImageFile);
+        imagePath = uploadedImage.imagePath;
+        imageUrl = uploadedImage.imageUrl;
       }
 
       const response = await fetch(
@@ -742,6 +764,7 @@ export default function Home() {
           body: JSON.stringify({
             category: editForm.category.trim(),
             desire_level: editDesireLevel,
+            image_path: imagePath,
             image_url: imageUrl,
             memo: editForm.memo.trim(),
             price: editForm.price.trim(),
@@ -1104,10 +1127,13 @@ function ImageDropzone({
           type="file"
         />
         {imageUrl ? (
-          <img
+          <Image
             alt=""
             className="max-h-60 w-full rounded-[1.25rem] object-cover"
+            height={1200}
             src={imageUrl}
+            unoptimized
+            width={1200}
           />
         ) : (
           <>
@@ -1440,10 +1466,13 @@ function WishlistCard({
 
           <div className="flex items-start gap-4">
             {item.image_url ? (
-              <img
+              <Image
                 alt=""
                 className="size-24 shrink-0 rounded-[1.5rem] object-cover sm:size-28"
+                height={112}
                 src={item.image_url}
+                unoptimized
+                width={112}
               />
             ) : null}
 

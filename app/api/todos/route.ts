@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+const bucketName = "wishlist-images";
+
 type Todo = {
   id: string | number;
   title: string;
   price: number | null;
   url: string | null;
   image_url: string | null;
+  image_path: string | null;
   memo: string | null;
   category: string | null;
   desire_level: number | null;
@@ -87,6 +90,7 @@ export async function POST(request: Request) {
   const desireLevel = readOptionalDesireLevel(body);
   const url = readStringField(body, "url");
   const imageUrl = readStringField(body, "image_url");
+  const imagePath = readStringField(body, "image_path");
   const memo = readStringField(body, "memo");
   const category = readStringField(body, "category");
 
@@ -115,6 +119,7 @@ export async function POST(request: Request) {
       category: category || null,
       completed: false,
       desire_level: desireLevel,
+      image_path: imagePath || null,
       image_url: imageUrl || null,
       memo: memo || null,
       price,
@@ -140,6 +145,31 @@ export async function DELETE(request: Request) {
   }
 
   const supabase = createSupabaseServerClient();
+  const { data: existingTodo, error: findError } = await supabase
+    .from("todos")
+    .select("*")
+    .eq("id", id)
+    .single<Todo>();
+
+  if (findError) {
+    const status = findError.code === "PGRST116" ? 404 : 500;
+
+    return NextResponse.json({ error: findError.message }, { status });
+  }
+
+  if (existingTodo.image_path) {
+    const { error: storageError } = await supabase.storage
+      .from(bucketName)
+      .remove([existingTodo.image_path]);
+
+    if (storageError) {
+      return NextResponse.json(
+        { error: storageError.message },
+        { status: 500 },
+      );
+    }
+  }
+
   const { data, error } = await supabase
     .from("todos")
     .delete()
