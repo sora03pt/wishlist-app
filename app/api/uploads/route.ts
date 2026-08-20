@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
 
 const bucketName = "wishlist-images";
 const maxImageSize = 5 * 1024 * 1024;
@@ -17,66 +17,39 @@ function getImageExtension(file: File) {
     return extension;
   }
 
-  return file.type.split("/").at(1) || "png";
-}
-
-async function ensureStorageBucket() {
-  const supabase = createSupabaseServerClient();
-  const { data: buckets, error: listError } =
-    await supabase.storage.listBuckets();
-
-  if (listError) {
-    return { error: listError.message, supabase };
-  }
-
-  if (!buckets?.some((bucket) => bucket.name === bucketName)) {
-    const { error: createError } = await supabase.storage.createBucket(
-      bucketName,
-      {
-        allowedMimeTypes: Array.from(allowedImageTypes),
-        fileSizeLimit: maxImageSize,
-        public: true,
-      },
-    );
-
-    if (createError) {
-      return { error: createError.message, supabase };
-    }
-  }
-
-  return { error: null, supabase };
+  return file.type.split("/").at(1) || "webp";
 }
 
 export async function POST(request: Request) {
+  const auth = await getAuthenticatedUser();
+
+  if (auth.error || !auth.user) {
+    return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
+  }
+
   const formData = await request.formData();
   const file = formData.get("file");
 
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "file is required." }, { status: 400 });
+    return NextResponse.json({ error: "画像を選択してください。" }, { status: 400 });
   }
 
   if (!allowedImageTypes.has(file.type)) {
     return NextResponse.json(
-      { error: "Only gif, jpeg, png, and webp images are supported." },
+      { error: "画像はPNG、JPG、WebP、GIF形式を選択してください。" },
       { status: 400 },
     );
   }
 
   if (file.size > maxImageSize) {
     return NextResponse.json(
-      { error: "Image must be 5MB or smaller." },
+      { error: "画像は5MB以下にしてください。" },
       { status: 400 },
     );
   }
 
-  const { error: bucketError, supabase } = await ensureStorageBucket();
-
-  if (bucketError) {
-    return NextResponse.json({ error: bucketError }, { status: 500 });
-  }
-
-  const filePath = `${crypto.randomUUID()}.${getImageExtension(file)}`;
-  const { error } = await supabase.storage
+  const filePath = `${auth.user.id}/${crypto.randomUUID()}.${getImageExtension(file)}`;
+  const { error } = await auth.supabase.storage
     .from(bucketName)
     .upload(filePath, file, {
       cacheControl: "3600",
@@ -85,13 +58,11 @@ export async function POST(request: Request) {
     });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "画像を保存できませんでした。Storage設定を確認してください。" },
+      { status: 500 },
+    );
   }
 
-  const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
-
-  return NextResponse.json(
-    { image_path: filePath, image_url: data.publicUrl },
-    { status: 201 },
-  );
+  return NextResponse.json({ image_path: filePath }, { status: 201 });
 }

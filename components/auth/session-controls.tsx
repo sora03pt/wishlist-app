@@ -1,0 +1,111 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Loader2, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+
+export function SessionControls() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const supabaseRef = useRef<ReturnType<typeof createSupabaseBrowserClient> | null>(
+    null,
+  );
+  const [email, setEmail] = useState("");
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (pathname === "/login" || pathname.startsWith("/auth/")) {
+      return;
+    }
+
+    const supabase = createSupabaseBrowserClient();
+    supabaseRef.current = supabase;
+    let isActive = true;
+
+    void supabase.auth.getUser().then(({ data, error }) => {
+      if (!isActive) {
+        return;
+      }
+
+      if (error || !data.user) {
+        router.replace("/login");
+        router.refresh();
+        return;
+      }
+
+      setEmail(data.user.email ?? "");
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [pathname, router]);
+
+  if (pathname === "/login" || pathname.startsWith("/auth/") || !email) {
+    return null;
+  }
+
+  async function handleSignOut() {
+    const supabase = supabaseRef.current;
+
+    if (!supabase || isSigningOut) {
+      return;
+    }
+
+    setErrorMessage("");
+    setIsSigningOut(true);
+
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        setErrorMessage("ログアウトに失敗しました。もう一度お試しください。");
+        return;
+      }
+
+      router.replace("/login");
+      router.refresh();
+    } catch {
+      setErrorMessage("ログアウトに失敗しました。もう一度お試しください。");
+    } finally {
+      setIsSigningOut(false);
+    }
+  }
+
+  return (
+    <div className="fixed right-3 top-3 z-50 flex items-center gap-2 sm:right-5 sm:top-5">
+      {errorMessage ? (
+        <p
+          className="max-w-48 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 shadow-sm"
+          role="alert"
+        >
+          {errorMessage}
+        </p>
+      ) : null}
+      <div className="flex items-center gap-2 rounded-xl border border-pink-100 bg-white/90 p-1.5 shadow-sm backdrop-blur">
+        <span className="hidden max-w-40 truncate px-2 text-xs font-medium text-zinc-600 sm:block">
+          {email}
+        </span>
+        <Button
+          aria-label="ログアウト"
+          className="h-9 rounded-lg"
+          disabled={isSigningOut}
+          onClick={() => void handleSignOut()}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          {isSigningOut ? (
+            <Loader2 className="animate-spin" size={16} />
+          ) : (
+            <LogOut size={16} />
+          )}
+          <span className="hidden sm:inline">ログアウト</span>
+        </Button>
+      </div>
+    </div>
+  );
+}
