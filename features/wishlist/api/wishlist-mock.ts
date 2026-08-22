@@ -1,28 +1,11 @@
 import { getMockSession } from "@/lib/mock/auth";
+import type {
+  WishlistInput,
+  WishlistItem,
+  WishlistItemId,
+} from "@/features/wishlist/types";
 
-export type MockWishlistItem = {
-  id: string;
-  title: string;
-  price: number | null;
-  url: string | null;
-  image_url: string | null;
-  image_path: string | null;
-  memo: string | null;
-  category: string | null;
-  desire_level: number | null;
-  completed: boolean;
-  created_at: string;
-};
-
-export type MockWishlistInput = {
-  title: string;
-  price: string;
-  url: string;
-  image_path: string;
-  memo: string;
-  category: string;
-  desire_level: number;
-};
+type MockWishlistItem = WishlistItem & { id: string };
 
 const mockWishlistKeyPrefix = "wishlist-app:mock-items";
 
@@ -65,7 +48,7 @@ export function getMockWishlistItems() {
   return readMockWishlistItems();
 }
 
-export function createMockWishlistItem(input: MockWishlistInput) {
+export function createMockWishlistItem(input: WishlistInput) {
   const items = readMockWishlistItems();
   const item: MockWishlistItem = {
     category: input.category || null,
@@ -86,8 +69,8 @@ export function createMockWishlistItem(input: MockWishlistInput) {
 }
 
 export function updateMockWishlistItem(
-  itemId: string | number,
-  updates: Partial<MockWishlistInput> & { completed?: boolean },
+  itemId: WishlistItemId,
+  updates: Partial<WishlistInput> & { completed?: boolean },
 ) {
   const items = readMockWishlistItems();
   const nextItems = items.map((item) => {
@@ -116,9 +99,11 @@ export function updateMockWishlistItem(
   saveMockWishlistItems(nextItems);
 }
 
-export function deleteMockWishlistItem(itemId: string | number) {
+export function deleteMockWishlistItem(itemId: WishlistItemId) {
   saveMockWishlistItems(
-    readMockWishlistItems().filter((item) => String(item.id) !== String(itemId)),
+    readMockWishlistItems().filter(
+      (item) => String(item.id) !== String(itemId),
+    ),
   );
 }
 

@@ -1,21 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
+import type { WishlistItem } from "@/features/wishlist/types";
 
 const bucketName = "wishlist-images";
-
-type Todo = {
-  id: string | number;
-  title: string;
-  price: number | null;
-  url: string | null;
-  image_url: string | null;
-  image_path: string | null;
-  memo: string | null;
-  category: string | null;
-  desire_level: number | null;
-  completed: boolean;
-  created_at: string;
-};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -64,7 +51,7 @@ function isNewImagePathForUser(imagePath: string, userId: string) {
 
 async function addSignedImageUrls(
   supabase: Awaited<ReturnType<typeof getAuthenticatedUser>>["supabase"],
-  todos: Todo[],
+  todos: WishlistItem[],
 ) {
   return Promise.all(
     todos.map(async (todo) => {
@@ -177,7 +164,7 @@ export async function POST(request: Request) {
       user_id: auth.user!.id,
     })
     .select("*")
-    .single<Todo>();
+    .single<WishlistItem>();
 
   if (error) {
     return NextResponse.json(
@@ -208,7 +195,7 @@ export async function DELETE(request: Request) {
     .select("id, image_path")
     .eq("id", id)
     .eq("user_id", auth.user!.id)
-    .single<Pick<Todo, "id" | "image_path">>();
+    .single<Pick<WishlistItem, "id" | "image_path">>();
 
   if (findError || !existingTodo) {
     return NextResponse.json({ error: "対象が見つかりません。" }, { status: 404 });
@@ -233,7 +220,7 @@ export async function DELETE(request: Request) {
     .eq("id", id)
     .eq("user_id", auth.user!.id)
     .select("*")
-    .single<Todo>();
+    .single<WishlistItem>();
 
   if (error) {
     return NextResponse.json(
