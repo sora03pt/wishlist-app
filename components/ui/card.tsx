@@ -1,11 +1,12 @@
 import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/lib/utils";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "rounded-[1.75rem] border border-pink-100 bg-white/90 text-zinc-950 shadow-[0_18px_50px_rgba(157,120,137,0.08)]",
+        "rounded-surface border border-border bg-surface/90 text-foreground shadow-surface",
         className,
       )}
       {...props}
@@ -26,9 +27,15 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
+function CardTitle({
+  asChild = false,
+  className,
+  ...props
+}: React.ComponentProps<"h3"> & { asChild?: boolean }) {
+  const Comp = asChild ? Slot : "h3";
+
   return (
-    <h3
+    <Comp
       className={cn("text-lg font-semibold leading-none", className)}
       {...props}
     />

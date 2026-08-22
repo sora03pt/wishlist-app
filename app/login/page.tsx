@@ -2,10 +2,13 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, LogIn, UserPlus } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormField, FormLabel } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import {
   isLocalMockMode,
   registerMockEmail,
@@ -14,6 +17,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthMode = "sign-in" | "sign-up";
+type AuthErrorTarget = "email" | "form" | "password" | null;
 
 const alreadyRegisteredMessage =
   "このメールアドレスはすでに登録されています。ログインしてください。";
@@ -40,8 +44,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [errorTarget, setErrorTarget] = useState<AuthErrorTarget>(null);
   const [noticeMessage, setNoticeMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function showError(message: string, target: Exclude<AuthErrorTarget, null>) {
+    setErrorMessage(message);
+    setErrorTarget(target);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,23 +59,24 @@ export default function LoginPage() {
     const normalizedEmail = email.trim();
 
     if (!normalizedEmail || !normalizedEmail.includes("@")) {
-      setErrorMessage("有効なメールアドレスを入力してください。");
+      showError("有効なメールアドレスを入力してください。", "email");
       return;
     }
 
     if (password.length < 8) {
-      setErrorMessage("パスワードは8文字以上で入力してください。");
+      showError("パスワードは8文字以上で入力してください。", "password");
       return;
     }
 
     setErrorMessage("");
+    setErrorTarget(null);
     setNoticeMessage("");
     setIsSubmitting(true);
 
     try {
       if (isLocalMockMode) {
         if (mode === "sign-up" && !registerMockEmail(normalizedEmail)) {
-          setErrorMessage(alreadyRegisteredMessage);
+          showError(alreadyRegisteredMessage, "email");
           return;
         }
 
@@ -84,7 +95,7 @@ export default function LoginPage() {
         });
 
         if (error) {
-          setErrorMessage(getAuthErrorMessage(mode));
+          showError(getAuthErrorMessage(mode), "form");
           return;
         }
 
@@ -102,16 +113,17 @@ export default function LoginPage() {
       });
 
       if (error) {
-        setErrorMessage(
+        showError(
           isAlreadyRegisteredAuthError(error)
             ? alreadyRegisteredMessage
             : getAuthErrorMessage(mode),
+          isAlreadyRegisteredAuthError(error) ? "email" : "form",
         );
         return;
       }
 
       if (data.user?.identities?.length === 0) {
-        setErrorMessage(alreadyRegisteredMessage);
+        showError(alreadyRegisteredMessage, "email");
         return;
       }
 
@@ -125,7 +137,10 @@ export default function LoginPage() {
         "確認メールを送信しました。メール内のリンクを開いて登録を完了してください。",
       );
     } catch {
-      setErrorMessage("通信に失敗しました。時間をおいてもう一度お試しください。");
+      showError(
+        "通信に失敗しました。時間をおいてもう一度お試しください。",
+        "form",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -134,36 +149,40 @@ export default function LoginPage() {
   function changeMode(nextMode: AuthMode) {
     setMode(nextMode);
     setErrorMessage("");
+    setErrorTarget(null);
     setNoticeMessage("");
   }
 
   const isSignIn = mode === "sign-in";
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#fff1f7,transparent_34%),linear-gradient(135deg,#fffafb_0%,#fbf7ff_48%,#ffffff_100%)] px-4 py-6 text-zinc-950 sm:px-6 sm:py-10">
+    <main className="app-canvas min-h-screen px-4 py-6 text-foreground sm:px-6 sm:py-10">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-md items-center">
         <Card className="w-full">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-pink-500">
+              <p className="text-xs font-bold uppercase text-accent-emphasis">
                 Wishlist
               </p>
               {isLocalMockMode ? (
                 <Badge variant="lavender">ローカルモック</Badge>
               ) : null}
             </div>
-            <CardTitle className="mt-2 text-2xl text-zinc-700">
-              {isSignIn ? "ログイン" : "新規登録"}
+            <CardTitle asChild>
+              <h1 className="mt-2 text-2xl text-foreground/80">
+                {isSignIn ? "ログイン" : "新規登録"}
+              </h1>
             </CardTitle>
             {isLocalMockMode ? (
-              <p className="mt-2 text-sm leading-6 text-zinc-500">
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 開発用の疑似認証です。入力内容はSupabaseへ送信されません。
               </p>
             ) : null}
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 rounded-xl border border-pink-100 bg-pink-50/60 p-1">
+            <div className="grid grid-cols-2 rounded-xl border border-border bg-accent/60 p-1">
               <Button
+                aria-pressed={isSignIn}
                 className="rounded-lg"
                 onClick={() => changeMode("sign-in")}
                 type="button"
@@ -172,6 +191,7 @@ export default function LoginPage() {
                 ログイン
               </Button>
               <Button
+                aria-pressed={!isSignIn}
                 className="rounded-lg"
                 onClick={() => changeMode("sign-up")}
                 type="button"
@@ -181,40 +201,79 @@ export default function LoginPage() {
               </Button>
             </div>
 
-            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-              <label className="block">
-                <span className="text-sm font-semibold text-zinc-800">
+            <form
+              aria-busy={isSubmitting}
+              className="mt-6 space-y-4"
+              noValidate
+              onSubmit={handleSubmit}
+            >
+              <FormField>
+                <FormLabel htmlFor="auth-email" required>
                   メールアドレス
-                </span>
-                <input
+                </FormLabel>
+                <Input
+                  aria-describedby={
+                    errorTarget === "email" || errorTarget === "form"
+                      ? "auth-error"
+                      : undefined
+                  }
+                  aria-invalid={
+                    errorTarget === "email" || errorTarget === "form"
+                  }
                   autoComplete="email"
-                  className="mt-2 h-12 w-full rounded-2xl border border-pink-100 bg-white px-4 text-base outline-none transition placeholder:text-zinc-400 focus:ring-4 focus:ring-pink-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
                   disabled={isSubmitting}
-                  onChange={(event) => setEmail(event.target.value)}
+                  id="auth-email"
+                  onChange={(event) => {
+                    setEmail(event.target.value);
+                    if (errorTarget === "email" || errorTarget === "form") {
+                      setErrorMessage("");
+                      setErrorTarget(null);
+                    }
+                  }}
                   placeholder="you@example.com"
                   type="email"
+                  required
                   value={email}
                 />
-              </label>
+              </FormField>
 
-              <label className="block">
-                <span className="text-sm font-semibold text-zinc-800">
+              <FormField>
+                <FormLabel htmlFor="auth-password" required>
                   パスワード
-                </span>
-                <input
+                </FormLabel>
+                <Input
+                  aria-describedby={
+                    errorTarget === "password" || errorTarget === "form"
+                      ? "auth-error"
+                      : undefined
+                  }
+                  aria-invalid={
+                    errorTarget === "password" || errorTarget === "form"
+                  }
                   autoComplete={isSignIn ? "current-password" : "new-password"}
-                  className="mt-2 h-12 w-full rounded-2xl border border-pink-100 bg-white px-4 text-base outline-none transition placeholder:text-zinc-400 focus:ring-4 focus:ring-pink-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
                   disabled={isSubmitting}
-                  onChange={(event) => setPassword(event.target.value)}
+                  id="auth-password"
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    if (
+                      errorTarget === "password" ||
+                      errorTarget === "form"
+                    ) {
+                      setErrorMessage("");
+                      setErrorTarget(null);
+                    }
+                  }}
                   placeholder="8文字以上"
                   type="password"
+                  required
                   value={password}
                 />
-              </label>
+              </FormField>
 
               {errorMessage ? (
                 <p
-                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-3 text-sm font-medium leading-6 text-rose-700"
+                  className="rounded-xl border border-destructive-border bg-destructive-surface px-3 py-3 text-sm font-medium leading-6 text-destructive"
+                  id="auth-error"
                   role="alert"
                 >
                   {errorMessage}
@@ -222,18 +281,21 @@ export default function LoginPage() {
               ) : null}
 
               {noticeMessage ? (
-                <p className="rounded-xl border border-lavender-200 bg-lavender-50 px-3 py-3 text-sm font-medium leading-6 text-lavender-700">
+                <p
+                  className="rounded-xl border border-selected-border bg-selected-subtle px-3 py-3 text-sm font-medium leading-6 text-selected-foreground"
+                  role="status"
+                >
                   {noticeMessage}
                 </p>
               ) : null}
 
               <Button
-                className="h-12 w-full rounded-2xl bg-zinc-950 text-base hover:bg-zinc-800"
+                className="h-12 w-full text-base"
                 disabled={isSubmitting}
                 type="submit"
               >
                 {isSubmitting ? (
-                  <Loader2 className="animate-spin" size={19} />
+                  <LoadingIndicator size={19} />
                 ) : isSignIn ? (
                   <LogIn size={19} />
                 ) : (
@@ -245,6 +307,11 @@ export default function LoginPage() {
                     ? "ログイン"
                     : "新規登録する"}
               </Button>
+              {isSubmitting ? (
+                <p className="sr-only" role="status">
+                  {isSignIn ? "ログイン処理中です。" : "新規登録処理中です。"}
+                </p>
+              ) : null}
             </form>
           </CardContent>
         </Card>

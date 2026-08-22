@@ -1,18 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
-
-type Todo = {
-  id: string | number;
-  title: string;
-  price: number | null;
-  url: string | null;
-  image_path: string | null;
-  memo: string | null;
-  category: string | null;
-  desire_level: number | null;
-  completed: boolean;
-  created_at: string;
-};
+import type { WishlistItem } from "@/features/wishlist/types";
 
 type TodoRouteContext = {
   params: Promise<{
@@ -123,7 +111,7 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
     .select("id, image_path")
     .eq("id", todoId)
     .eq("user_id", auth.user.id)
-    .single<Pick<Todo, "id" | "image_path">>();
+    .single<Pick<WishlistItem, "id" | "image_path">>();
 
   if (findError || !existingTodo) {
     return NextResponse.json({ error: "対象が見つかりません。" }, { status: 404 });
@@ -216,7 +204,7 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
     .eq("id", todoId)
     .eq("user_id", auth.user.id)
     .select("*")
-    .single<Todo>();
+    .single<WishlistItem>();
 
   if (error) {
     return NextResponse.json(
