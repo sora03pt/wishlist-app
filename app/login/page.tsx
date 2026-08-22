@@ -6,10 +6,27 @@ import { Loader2, LogIn, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { isLocalMockMode, setMockSession } from "@/lib/mock/auth";
+import {
+  isLocalMockMode,
+  registerMockEmail,
+  setMockSession,
+} from "@/lib/mock/auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthMode = "sign-in" | "sign-up";
+
+const alreadyRegisteredMessage =
+  "このメールアドレスはすでに登録されています。ログインしてください。";
+
+function isAlreadyRegisteredAuthError(error: {
+  code?: string;
+  message?: string;
+}) {
+  return (
+    error.code === "user_already_exists" ||
+    error.message === "User already registered"
+  );
+}
 
 function getAuthErrorMessage(mode: AuthMode) {
   return mode === "sign-in"
@@ -47,6 +64,11 @@ export default function LoginPage() {
 
     try {
       if (isLocalMockMode) {
+        if (mode === "sign-up" && !registerMockEmail(normalizedEmail)) {
+          setErrorMessage(alreadyRegisteredMessage);
+          return;
+        }
+
         setMockSession(normalizedEmail);
         router.replace("/");
         router.refresh();
@@ -80,7 +102,16 @@ export default function LoginPage() {
       });
 
       if (error) {
-        setErrorMessage(getAuthErrorMessage(mode));
+        setErrorMessage(
+          isAlreadyRegisteredAuthError(error)
+            ? alreadyRegisteredMessage
+            : getAuthErrorMessage(mode),
+        );
+        return;
+      }
+
+      if (data.user?.identities?.length === 0) {
+        setErrorMessage(alreadyRegisteredMessage);
         return;
       }
 
