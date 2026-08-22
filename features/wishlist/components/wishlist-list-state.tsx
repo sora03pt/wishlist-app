@@ -17,7 +17,11 @@ export function WishlistError({ message }: { message: string }) {
 
 export function WishlistLoadingState() {
   return (
-    <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-border-strong px-4 py-10 text-sm font-bold text-muted-foreground">
+    <div
+      aria-live="polite"
+      className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-border-strong px-4 py-10 text-sm font-bold text-muted-foreground"
+      role="status"
+    >
       <LoadingIndicator size={18} />
       読み込み中
     </div>
@@ -26,8 +30,19 @@ export function WishlistLoadingState() {
 
 export function WishlistEmptyState() {
   return (
-    <div className="rounded-lg border border-dashed border-border-strong px-4 py-10 text-center text-sm font-medium text-muted-foreground">
+    <div
+      className="rounded-lg border border-dashed border-border-strong px-4 py-10 text-center text-sm font-medium text-muted-foreground"
+      role="status"
+    >
       欲しいものがまだありません。
     </div>
+  );
+}
+
+export function WishlistStatus({ message }: { message: string }) {
+  return (
+    <p aria-atomic="true" className="sr-only" role="status">
+      {message}
+    </p>
   );
 }

@@ -4,7 +4,20 @@ import "../app/globals.css";
 const preview: Preview = {
   parameters: {
     a11y: {
-      test: "todo",
+      options: {
+        runOnly: {
+          type: "tag",
+          values: [
+            "wcag2a",
+            "wcag2aa",
+            "wcag21a",
+            "wcag21aa",
+            "wcag22aa",
+            "best-practice",
+          ],
+        },
+      },
+      test: "error",
     },
     backgrounds: {
       options: {

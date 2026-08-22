@@ -51,11 +51,16 @@ export function WishlistList({
   updatingId,
 }: WishlistListProps) {
   return (
-    <Card>
+    <Card
+      aria-busy={isInitialLoading || isRefreshing}
+      aria-labelledby="wishlist-list-title"
+    >
       <CardHeader className="pb-0">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <CardTitle>欲しいもの一覧</CardTitle>
+            <CardTitle asChild>
+              <h2 id="wishlist-list-title">欲しいもの一覧</h2>
+            </CardTitle>
             {isRefreshing ? (
               <span className="text-xs font-bold text-muted-foreground">
                 再取得中
@@ -89,31 +94,36 @@ export function WishlistList({
       <CardContent>
         <WishlistError message={errorMessage} />
 
-        <div className="mt-4 grid gap-3">
-          {isInitialLoading ? (
+        {isInitialLoading ? (
+          <div className="mt-4">
             <WishlistLoadingState />
-          ) : items.length > 0 ? (
-            items.map((item) =>
+          </div>
+        ) : items.length > 0 ? (
+          <ul className="mt-4 grid gap-3">
+            {items.map((item) =>
               editingId === item.id ? null : (
-                <WishlistCard
-                  deletingId={deletingId}
-                  item={item}
-                  itemActionDisabled={
-                    hasItemMutation ||
-                    (editingId !== null && editingId !== item.id)
-                  }
-                  key={item.id}
-                  onDelete={onDelete}
-                  onStartEdit={onStartEdit}
-                  onTogglePurchased={onTogglePurchased}
-                  updatingId={updatingId}
-                />
+                <li key={item.id}>
+                  <WishlistCard
+                    deletingId={deletingId}
+                    item={item}
+                    itemActionDisabled={
+                      hasItemMutation ||
+                      (editingId !== null && editingId !== item.id)
+                    }
+                    onDelete={onDelete}
+                    onStartEdit={onStartEdit}
+                    onTogglePurchased={onTogglePurchased}
+                    updatingId={updatingId}
+                  />
+                </li>
               ),
-            )
-          ) : (
+            )}
+          </ul>
+        ) : (
+          <div className="mt-4">
             <WishlistEmptyState />
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

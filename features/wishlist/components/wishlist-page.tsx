@@ -1,16 +1,43 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { WishlistCreatePanel } from "@/features/wishlist/components/wishlist-create-panel";
 import { WishlistEditDialog } from "@/features/wishlist/components/wishlist-edit-dialog";
 import { WishlistList } from "@/features/wishlist/components/wishlist-list";
+import { WishlistStatus } from "@/features/wishlist/components/wishlist-list-state";
 import { WishlistSummary } from "@/features/wishlist/components/wishlist-summary";
 import { useWishlistController } from "@/features/wishlist/hooks/use-wishlist-controller";
+import { getWishlistEditButtonId } from "@/features/wishlist/lib/dom-ids";
+import type { WishlistItemId } from "@/features/wishlist/types";
 
 export function WishlistPage() {
   const wishlist = useWishlistController();
+  const editingItemId = wishlist.editingItem?.id ?? null;
+  const lastEditingItemId = useRef<WishlistItemId | null>(null);
+
+  useEffect(() => {
+    if (editingItemId !== null) {
+      lastEditingItemId.current = editingItemId;
+      return;
+    }
+
+    const returnFocusItemId = lastEditingItemId.current;
+
+    if (returnFocusItemId === null) {
+      return;
+    }
+
+    lastEditingItemId.current = null;
+    requestAnimationFrame(() => {
+      document
+        .getElementById(getWishlistEditButtonId(returnFocusItemId))
+        ?.focus();
+    });
+  }, [editingItemId]);
 
   return (
     <main className="app-canvas min-h-screen text-foreground">
+      <WishlistStatus message={wishlist.statusMessage} />
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 lg:py-10">
         <WishlistSummary
           itemCount={wishlist.items.length}
@@ -42,7 +69,9 @@ export function WishlistPage() {
           isSubmitting={wishlist.isSubmitting}
           items={wishlist.items}
           onDelete={wishlist.removeItem}
-          onRefresh={wishlist.refreshItems}
+          onRefresh={async () => {
+            await wishlist.refreshItems();
+          }}
           onStartEdit={wishlist.startEdit}
           onTogglePurchased={wishlist.togglePurchased}
           updatingId={wishlist.updatingId}

@@ -83,8 +83,13 @@ const meta = {
   parameters: {
     docs: {
       description: {
-        component:
-          "Wishlistの新規作成と編集で共用するFeature Formです。入力primitiveはDesign Systemを利用し、商品フィールド、カテゴリ候補、欲しい度、画像というドメイン構成をFeature側に保持します。",
+        component: `Wishlistの新規作成と編集で共用するFeature Formです。入力primitiveはDesign Systemを利用し、商品フィールド、カテゴリ候補、欲しい度、画像というドメイン構成をFeature側に保持します。
+
+## Accessibility
+商品名は見えるlabelとnative requiredで必須を伝えます。空のまま送信した場合はFormMessageを表示し、aria-invalid / aria-describedbyで入力欄へ関連付けてfocusを戻します。価格はnumber + numeric keyboard、URLはnative url typeを利用します。
+
+## Manual check
+先頭からTab順が見た目の順序と一致すること、商品名を空にして送信するとエラーへfocusが移ること、RatingとSelectを矢印キーで変更できることを確認します。`,
       },
     },
   },
@@ -96,6 +101,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Create: Story = {};
+export const RequiredError: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: "商品名を空のまま追加すると、入力欄に関連付いたエラーを確認できます。",
+      },
+    },
+  },
+};
 export const Edit: Story = {
   args: { initialValues: editValues, mode: "edit" },
 };

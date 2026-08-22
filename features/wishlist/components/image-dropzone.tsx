@@ -22,6 +22,8 @@ export function ImageDropzone({
   onRemove,
 }: ImageDropzoneProps) {
   const inputId = useId();
+  const instructionId = `${inputId}-instruction`;
+  const labelId = `${inputId}-label`;
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -49,7 +51,9 @@ export function ImageDropzone({
 
   return (
     <div className="sm:col-span-2">
-      <span className="text-sm font-semibold text-foreground">{label}</span>
+      <span className="text-sm font-semibold text-foreground" id={labelId}>
+        {label}
+      </span>
       <label
         className={`mt-2 flex min-h-44 cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-dashed px-5 py-6 text-center transition focus-within:ring-4 focus-within:ring-focus ${
           disabled
@@ -62,6 +66,8 @@ export function ImageDropzone({
       >
         <input
           accept="image/*"
+          aria-describedby={instructionId}
+          aria-labelledby={labelId}
           className="sr-only"
           disabled={disabled}
           id={inputId}
@@ -69,18 +75,23 @@ export function ImageDropzone({
           type="file"
         />
         {imageUrl ? (
-          <Image
-            alt=""
-            className="max-h-60 w-full rounded-[1.25rem] object-cover"
-            height={1200}
-            src={imageUrl}
-            unoptimized
-            width={1200}
-          />
+          <>
+            <Image
+              alt=""
+              className="max-h-60 w-full rounded-[1.25rem] object-cover"
+              height={1200}
+              src={imageUrl}
+              unoptimized
+              width={1200}
+            />
+            <span className="text-sm font-bold" id={instructionId}>
+              選択済み。タップして変更
+            </span>
+          </>
         ) : (
           <>
             <ImagePlus size={30} />
-            <span className="text-sm font-bold">
+            <span className="text-sm font-bold" id={instructionId}>
               画像をドラッグ&ドロップ、またはタップして選択
             </span>
             <span className="text-xs font-medium text-muted-foreground">
@@ -89,7 +100,10 @@ export function ImageDropzone({
           </>
         )}
         {isUploading ? (
-          <span className="inline-flex items-center gap-2 text-sm font-bold text-accent-foreground">
+          <span
+            className="inline-flex items-center gap-2 text-sm font-bold text-accent-foreground"
+            role="status"
+          >
             <LoadingIndicator size={16} />
             アップロード中
           </span>

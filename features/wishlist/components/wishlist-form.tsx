@@ -1,5 +1,5 @@
-import type { FormEvent, ReactNode } from "react";
-import { FormField, FormLabel } from "@/components/ui/form";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { FormField, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageDropzone } from "@/features/wishlist/components/image-dropzone";
@@ -46,26 +46,64 @@ export function WishlistForm({
 }: WishlistFormProps) {
   const isCreate = mode === "create";
   const fieldPrefix = `${mode}-wishlist`;
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const [hasTitleError, setHasTitleError] = useState(false);
+  const titleErrorId = `${fieldPrefix}-title-error`;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!values.title.trim()) {
+      setHasTitleError(true);
+      titleInputRef.current?.focus();
+      return;
+    }
+
+    setHasTitleError(false);
     void onSubmit();
   }
 
+  function handleTitleChange(value: string) {
+    if (hasTitleError && value.trim()) {
+      setHasTitleError(false);
+    }
+
+    onChange("title", value);
+  }
+
   return (
-    <form onSubmit={handleSubmit}>
+    <form
+      aria-busy={disabled || isUploadingImage}
+      onSubmit={handleSubmit}
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField className="sm:col-span-2">
-          <FormLabel htmlFor={`${fieldPrefix}-title`}>商品名</FormLabel>
+          <FormLabel htmlFor={`${fieldPrefix}-title`} required>
+            商品名
+          </FormLabel>
           <Input
+            aria-describedby={hasTitleError ? titleErrorId : undefined}
+            aria-invalid={hasTitleError}
             disabled={disabled}
             id={`${fieldPrefix}-title`}
-            onChange={(event) => onChange("title", event.target.value)}
+            onChange={(event) => handleTitleChange(event.target.value)}
+            onInvalid={(event) => {
+              event.preventDefault();
+              setHasTitleError(true);
+              titleInputRef.current?.focus();
+            }}
             placeholder={
               isCreate ? "例: ノイズキャンセリングイヤホン" : undefined
             }
+            ref={titleInputRef}
+            required
             value={values.title}
           />
+          {hasTitleError ? (
+            <FormMessage id={titleErrorId}>
+              商品名を入力してください。
+            </FormMessage>
+          ) : null}
         </FormField>
 
         <FormField>
@@ -80,6 +118,7 @@ export function WishlistForm({
               onChange={(event) => onChange("price", event.target.value)}
               placeholder={isCreate ? "例: 19800" : undefined}
               type="number"
+              step="1"
               value={values.price}
             />
             {isCreate ? null : (
@@ -126,12 +165,9 @@ export function WishlistForm({
         </FormField>
 
         <div className="sm:col-span-2">
-          <span className="text-sm font-semibold text-foreground">
-            欲しいレベル
-          </span>
           <StarRating
-            ariaLabel={ratingAriaLabel}
             disabled={disabled}
+            label={ratingAriaLabel}
             onChange={(value) => onChange("desireLevel", value)}
             value={values.desireLevel ?? 3}
           />

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { StarRatingDisplay } from "@/features/wishlist/components/star-rating";
+import { getWishlistEditButtonId } from "@/features/wishlist/lib/dom-ids";
 import {
   formatCreatedAt,
   formatPrice,
@@ -60,7 +61,7 @@ export function WishlistCard({
             <div className="flex items-start gap-4">
               {item.image_url ? (
                 <Image
-                  alt=""
+                  alt={item.title}
                   className="size-24 shrink-0 rounded-[1.5rem] object-cover sm:size-28"
                   height={112}
                   src={item.image_url}
@@ -109,14 +110,15 @@ export function WishlistCard({
                   </dt>
                   <dd className="min-w-0">
                     <a
+                      aria-label={`${item.title}の商品ページを新しいタブで開く`}
                       className="inline-flex max-w-full items-center gap-1 break-all font-semibold text-accent-foreground underline-offset-4 hover:underline"
                       href={item.url}
                       rel="noreferrer"
                       target="_blank"
                     >
-                      <LinkIcon className="shrink-0" size={15} />
+                      <LinkIcon aria-hidden="true" className="shrink-0" size={15} />
                       {item.url}
-                      <ExternalLink className="shrink-0" size={14} />
+                      <ExternalLink aria-hidden="true" className="shrink-0" size={14} />
                     </a>
                   </dd>
                 </div>
@@ -144,6 +146,7 @@ export function WishlistCard({
               {item.completed ? "未購入に戻す" : "購入済みにする"}
             </Button>
             <Button
+              id={getWishlistEditButtonId(item.id)}
               variant="outline"
               disabled={isBusy}
               onClick={() => onStartEdit(item)}

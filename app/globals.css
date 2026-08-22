@@ -11,6 +11,7 @@
   --muted-foreground: #71717a;
   --border: #fce7f3;
   --border-strong: #fbcfe8;
+  --control-border: #a67a90;
   --primary: #18181b;
   --primary-hover: #27272a;
   --primary-foreground: #ffffff;
@@ -19,11 +20,11 @@
   --accent-hover: #fbcfe8;
   --accent-border: #fbcfe8;
   --accent-foreground: #be185d;
-  --accent-emphasis: #ec4899;
+  --accent-emphasis: #be185d;
   --destructive: #be123c;
   --destructive-surface: #fff1f2;
   --destructive-border: #fecdd3;
-  --focus: #fce7f3;
+  --focus: #be185d;
   --selected: #f1e9ff;
   --selected-subtle: #faf7ff;
   --selected-border: #e5d5ff;
@@ -47,6 +48,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-control-border: var(--control-border);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);

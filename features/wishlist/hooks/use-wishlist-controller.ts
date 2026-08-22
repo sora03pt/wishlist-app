@@ -38,6 +38,7 @@ export function useWishlistController() {
     WishlistItemId | "new" | null
   >(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
     let isActive = true;
@@ -72,16 +73,26 @@ export function useWishlistController() {
     };
   }, []);
 
-  const refreshItems = useCallback(async () => {
+  const refreshItems = useCallback(async (announce = true) => {
     setGetStatus("refreshing");
     setErrorMessage("");
 
+    if (announce) {
+      setStatusMessage("欲しいものリストを再取得しています。");
+    }
+
     try {
       setItems(await getWishlistItems());
+      if (announce) {
+        setStatusMessage("欲しいものリストを再取得しました。");
+      }
+      return true;
     } catch (error) {
+      setStatusMessage("");
       setErrorMessage(
         getErrorMessage(error, "欲しいものリストの取得に失敗しました。"),
       );
+      return false;
     } finally {
       setGetStatus("idle");
     }
@@ -114,10 +125,7 @@ export function useWishlistController() {
     updatingId !== null ||
     savingEditId !== null ||
     uploadingImageId !== null;
-  const canSubmit =
-    createForm.values.title.trim().length > 0 &&
-    !isSubmitting &&
-    !hasActiveEdit;
+  const canSubmit = !isSubmitting && !hasActiveEdit;
   const editingItem =
     editingId === null
       ? null
@@ -125,6 +133,7 @@ export function useWishlistController() {
 
   async function selectCreateImage(file: File) {
     setErrorMessage("");
+    setStatusMessage("");
 
     try {
       await createForm.selectImage(file);
@@ -135,6 +144,7 @@ export function useWishlistController() {
 
   async function selectEditImage(file: File) {
     setErrorMessage("");
+    setStatusMessage("");
 
     try {
       await editForm.selectImage(file);
@@ -151,6 +161,7 @@ export function useWishlistController() {
     setEditingId(item.id);
     editForm.reset(createWishlistFormFromItem(item), item.image_url ?? "");
     setErrorMessage("");
+    setStatusMessage("");
   }
 
   function cancelEdit() {
@@ -161,6 +172,7 @@ export function useWishlistController() {
     setEditingId(null);
     editForm.reset();
     setErrorMessage("");
+    setStatusMessage("");
   }
 
   async function submitCreate() {
@@ -175,6 +187,7 @@ export function useWishlistController() {
 
     setIsSubmitting(true);
     setErrorMessage("");
+    setStatusMessage("欲しいものを登録しています。");
 
     try {
       let imagePath = createForm.values.imagePath;
@@ -189,8 +202,11 @@ export function useWishlistController() {
         createWishlistInput(createForm.values, imagePath),
       );
       createForm.reset();
-      await refreshItems();
+      if (await refreshItems(false)) {
+        setStatusMessage("欲しいものを追加しました。");
+      }
     } catch (error) {
+      setStatusMessage("");
       setErrorMessage(
         getErrorMessage(error, "欲しいものの登録に失敗しました。"),
       );
@@ -207,11 +223,23 @@ export function useWishlistController() {
 
     setUpdatingId(item.id);
     setErrorMessage("");
+    setStatusMessage(
+      item.completed
+        ? `${item.title}を未購入に更新しています。`
+        : `${item.title}を購入済みに更新しています。`,
+    );
 
     try {
       await updateWishlistItemCompleted(item.id, !item.completed);
-      await refreshItems();
+      if (await refreshItems(false)) {
+        setStatusMessage(
+          item.completed
+            ? `${item.title}を未購入に戻しました。`
+            : `${item.title}を購入済みにしました。`,
+        );
+      }
     } catch (error) {
+      setStatusMessage("");
       setErrorMessage(
         getErrorMessage(error, "購入状態の更新に失敗しました。"),
       );
@@ -227,11 +255,24 @@ export function useWishlistController() {
 
     setDeletingId(itemId);
     setErrorMessage("");
+    const deletingItem = items.find((item) => item.id === itemId);
+    setStatusMessage(
+      deletingItem
+        ? `${deletingItem.title}を削除しています。`
+        : "欲しいものを削除しています。",
+    );
 
     try {
       await deleteWishlistItem(itemId);
-      await refreshItems();
+      if (await refreshItems(false)) {
+        setStatusMessage(
+          deletingItem
+            ? `${deletingItem.title}を削除しました。`
+            : "欲しいものを削除しました。",
+        );
+      }
     } catch (error) {
+      setStatusMessage("");
       setErrorMessage(
         getErrorMessage(error, "欲しいものの削除に失敗しました。"),
       );
@@ -252,6 +293,7 @@ export function useWishlistController() {
 
     setSavingEditId(editingId);
     setErrorMessage("");
+    setStatusMessage("欲しいものを更新しています。");
 
     try {
       let imagePath = editForm.values.imagePath;
@@ -268,8 +310,11 @@ export function useWishlistController() {
       );
       setEditingId(null);
       editForm.reset();
-      await refreshItems();
+      if (await refreshItems(false)) {
+        setStatusMessage("欲しいものを更新しました。");
+      }
     } catch (error) {
+      setStatusMessage("");
       setErrorMessage(
         getErrorMessage(error, "欲しいものの更新に失敗しました。"),
       );
@@ -303,6 +348,7 @@ export function useWishlistController() {
     selectCreateImage,
     selectEditImage,
     startEdit,
+    statusMessage,
     submitCreate,
     togglePurchased,
     unpurchasedCount: items.length - purchasedCount,

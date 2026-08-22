@@ -12,9 +12,11 @@ const colorTokens = [
   ["muted-foreground", "bg-muted-foreground", "補助情報と日時"],
   ["border", "bg-border", "静かな境界線"],
   ["border-strong", "bg-border-strong", "操作可能要素の境界線"],
+  ["control-border", "bg-control-border", "入力controlの3:1境界線"],
   ["primary", "bg-primary", "主要アクション"],
   ["accent", "bg-accent", "hoverや淡い強調面"],
   ["accent-emphasis", "bg-accent-emphasis", "星やブランドアクセント"],
+  ["focus", "bg-focus", "keyboard focus indicator"],
   ["selected", "bg-selected", "購入済みなどの選択面"],
   ["destructive", "bg-destructive", "削除とエラー"],
 ] as const;
@@ -48,6 +50,29 @@ function ColorsFoundation() {
             </div>
           ))}
         </div>
+      </FoundationSection>
+      <FoundationSection
+        description="通常テキストは4.5:1、control境界とfocus indicatorは3:1を下限として確認します。"
+        title="Contrast decisions"
+      >
+        <dl className="grid gap-3 text-sm sm:grid-cols-2">
+          <div className="rounded-control border border-border bg-surface p-4">
+            <dt className="font-bold">focus / surface</dt>
+            <dd className="mt-1 text-muted-foreground">6.038:1</dd>
+          </div>
+          <div className="rounded-control border border-border bg-surface p-4">
+            <dt className="font-bold">control-border / surface</dt>
+            <dd className="mt-1 text-muted-foreground">3.616:1</dd>
+          </div>
+          <div className="rounded-control border border-border bg-surface p-4">
+            <dt className="font-bold">muted-foreground / background</dt>
+            <dd className="mt-1 text-muted-foreground">4.619:1</dd>
+          </div>
+          <div className="rounded-control border border-border bg-surface p-4">
+            <dt className="font-bold">selected-foreground / selected</dt>
+            <dd className="mt-1 text-muted-foreground">4.539:1</dd>
+          </div>
+        </dl>
       </FoundationSection>
       <FoundationSection
         description="successとwarningは現在Badgeだけで使うため、Tailwind標準のemerald／amberを維持します。利用範囲が広がった時点でsemantic tokenへ昇格します。"

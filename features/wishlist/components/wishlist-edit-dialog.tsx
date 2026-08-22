@@ -62,9 +62,7 @@ export function WishlistEditDialog({
             <div className="grid grid-cols-2 gap-2">
               <Button
                 className="h-11"
-                disabled={
-                  isSaving || isUploadingImage || !values.title.trim()
-                }
+                disabled={isSaving || isUploadingImage}
                 type="submit"
               >
                 {isSaving || isUploadingImage ? (

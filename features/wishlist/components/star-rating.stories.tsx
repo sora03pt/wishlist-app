@@ -10,8 +10,8 @@ function StarRatingDemo({ disabled = false, initialValue = 3 }) {
 
   return (
     <StarRating
-      ariaLabel="欲しいレベル"
       disabled={disabled}
+      label="欲しいレベル"
       onChange={setValue}
       value={value}
     />
@@ -27,8 +27,13 @@ const meta = {
   parameters: {
     docs: {
       description: {
-        component:
-          "Wishlist固有の欲しい度入力です。Design System primitiveではなく、1〜5というドメインルールと星表現をまとめたFeature Componentです。",
+        component: `Wishlist固有の欲しい度入力です。Design System primitiveではなく、1〜5というドメインルールと星表現をまとめたFeature Componentです。
+
+## Accessibility
+native radioとfieldset / legendを使用し、現在値・グループ名・選択肢を支援技術へ伝えます。Tabではグループへ1回だけ入り、矢印キーで値を変更できます。選択状態は色に加えて星の塗りでも表します。
+
+## Manual check
+Tabで選択中の星へ移動し、左右矢印で値が変わること、focus ringが明確なこと、スクリーンリーダーが「欲しいレベル、3つ星、選択済み」のように読み上げることを確認します。`,
       },
     },
   },
@@ -42,6 +47,16 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 export const Maximum: Story = { args: { initialValue: 5 } };
 export const Disabled: Story = { args: { disabled: true } };
+export const KeyboardNavigation: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Tabでradio groupへ移動後、左右矢印で変更します。Tabを5回押す必要はありません。",
+      },
+    },
+  },
+};
 export const Display: Story = { render: () => <StarRatingDisplay value={4} /> };
 export const UnsetDisplay: Story = {
   render: () => <StarRatingDisplay value={null} />,

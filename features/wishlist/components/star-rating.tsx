@@ -1,57 +1,71 @@
+import { useId } from "react";
 import { Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   formatDesireLevel,
   getValidDesireLevel,
 } from "@/features/wishlist/lib/formatters";
 
 type StarRatingProps = {
-  ariaLabel: string;
   disabled: boolean;
+  label: string;
   onChange: (value: number) => void;
   value: number;
 };
 
 export function StarRating({
-  ariaLabel,
   disabled,
+  label,
   onChange,
   value,
 }: StarRatingProps) {
-  return (
-    <div
-      aria-label={ariaLabel}
-      className="mt-2 flex items-center gap-1"
-      role="group"
-    >
-      {[1, 2, 3, 4, 5].map((level) => {
-        const isSelected = level <= value;
+  const groupName = useId();
 
-        return (
-          <Button
-            aria-label={`${level}つ星`}
-            className={`size-10 rounded-full p-0 ${
-              isSelected
-                ? "text-accent-emphasis hover:text-accent-foreground"
-                : "text-accent-border hover:text-accent-emphasis"
-            }`}
-            disabled={disabled}
-            key={level}
-            onClick={() => onChange(level)}
-            type="button"
-            variant="ghost"
-          >
-            <Star
-              className={isSelected ? "fill-current" : undefined}
-              size={24}
-            />
-          </Button>
-        );
-      })}
-      <span className="ml-2 text-sm font-bold text-selected-foreground">
-        {value} / 5
-      </span>
-    </div>
+  return (
+    <fieldset className="min-w-0">
+      <legend className="text-sm font-semibold text-foreground">{label}</legend>
+      <div className="mt-2 flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((level) => {
+          const isFilled = level <= value;
+
+          return (
+            <label
+              className={disabled ? "cursor-not-allowed" : "cursor-pointer"}
+              key={level}
+            >
+              <input
+                checked={value === level}
+                className="peer sr-only"
+                disabled={disabled}
+                name={groupName}
+                onChange={() => onChange(level)}
+                type="radio"
+                value={level}
+              />
+              <span
+                className={`inline-flex size-10 items-center justify-center rounded-full transition peer-focus-visible:ring-4 peer-focus-visible:ring-focus ${
+                  isFilled
+                    ? "text-accent-emphasis"
+                    : "text-muted-foreground"
+                } ${disabled ? "opacity-50" : "hover:bg-accent"}`}
+              >
+                <Star
+                  aria-hidden="true"
+                  className={isFilled ? "fill-current" : undefined}
+                  size={24}
+                />
+                <span className="sr-only">{level}つ星</span>
+              </span>
+            </label>
+          );
+        })}
+        <span
+          aria-hidden="true"
+          className="ml-2 text-sm font-bold text-selected-foreground"
+        >
+          {value} / 5
+        </span>
+      </div>
+    </fieldset>
   );
 }
 
@@ -62,10 +76,11 @@ export function StarRatingDisplay({ value }: { value: number | null }) {
     return (
       <span
         aria-label="欲しい度 未設定"
-        className="inline-flex items-center gap-0.5 text-muted-foreground/40"
+        className="inline-flex items-center gap-0.5 text-muted-foreground"
+        role="img"
       >
         {[1, 2, 3, 4, 5].map((level) => (
-          <Star key={level} size={17} />
+          <Star aria-hidden="true" key={level} size={17} />
         ))}
       </span>
     );
@@ -75,9 +90,11 @@ export function StarRatingDisplay({ value }: { value: number | null }) {
     <span
       aria-label={formatDesireLevel(desireLevel)}
       className="inline-flex items-center gap-0.5 text-accent-emphasis"
+      role="img"
     >
       {[1, 2, 3, 4, 5].map((level) => (
         <Star
+          aria-hidden="true"
           className={
             level <= desireLevel ? "fill-current" : "text-accent-border"
           }

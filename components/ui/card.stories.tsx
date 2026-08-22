@@ -5,7 +5,9 @@ function CardDemo({ content, title }: { content: string; title: string }) {
   return (
     <Card className="w-96 max-w-full">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle asChild>
+          <h2>{title}</h2>
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 text-sm leading-6 text-muted-foreground">
         {content}

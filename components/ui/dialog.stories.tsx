@@ -52,10 +52,13 @@ const meta = {
 Content、Header、Title、Triggerを組み合わせるcompound componentです。
 
 ## Accessibility
-Radix UIのfocus trap、Escape操作、Dialog semanticsを維持し、必ずDialogTitleを置きます。
+Radix UIのfocus trap、Escape操作、Dialog semantics、Triggerへのfocus復帰を維持し、必ずDialogTitleとDialogDescriptionを置きます。アプリ側のようにTriggerとDialogが別ツリーの場合だけ、閉じた後のfocus復帰先を明示します。
 
 ## Do / Don't
-通常のページ遷移で十分な長い作業や、軽い通知だけの用途には使いません。`,
+通常のページ遷移で十分な長い作業や、軽い通知だけの用途には使いません。破壊的操作を置く場合は操作名と対象を明示し、通常操作と視覚的に区別します。
+
+## Manual check
+開いた直後にDialog内へfocusが移ること、TabがDialog内を循環すること、Escapeと閉じるボタンで閉じること、閉じた後にTriggerへ戻ることを確認します。`,
       },
     },
   },

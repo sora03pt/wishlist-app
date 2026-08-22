@@ -5,12 +5,31 @@ function FormField({ className, ...props }: React.ComponentProps<"div">) {
   return <div className={cn("grid gap-2", className)} {...props} />;
 }
 
-function FormLabel({ className, ...props }: React.ComponentProps<"label">) {
+type FormLabelProps = React.ComponentProps<"label"> & {
+  required?: boolean;
+};
+
+function FormLabel({
+  children,
+  className,
+  required = false,
+  ...props
+}: FormLabelProps) {
   return (
     <label
       className={cn("text-sm font-semibold text-foreground", className)}
       {...props}
-    />
+    >
+      {children}
+      {required ? (
+        <>
+          <span aria-hidden="true" className="ml-1 text-destructive">
+            *
+          </span>
+          <span className="sr-only">（必須）</span>
+        </>
+      ) : null}
+    </label>
   );
 }
 
