@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
 
 type Todo = {
   id: string | number;
   title: string;
   price: number | null;
   url: string | null;
-  image_url: string | null;
   image_path: string | null;
   memo: string | null;
   category: string | null;
@@ -25,7 +24,6 @@ type TodoUpdate = {
   title?: string;
   price?: number | null;
   url?: string | null;
-  image_url?: string | null;
   image_path?: string | null;
   memo?: string | null;
   category?: string | null;
@@ -99,7 +97,13 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
   const todoId = id.trim();
 
   if (!todoId) {
-    return NextResponse.json({ error: "id is required." }, { status: 400 });
+    return NextResponse.json({ error: "対象を指定してください。" }, { status: 400 });
+  }
+
+  const auth = await getAuthenticatedUser();
+
+  if (auth.error || !auth.user) {
+    return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
   }
 
   let body: unknown;
@@ -107,17 +111,27 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    return NextResponse.json({ error: "入力内容が正しくありません。" }, { status: 400 });
   }
 
   if (!isRecord(body)) {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    return NextResponse.json({ error: "入力内容が正しくありません。" }, { status: 400 });
+  }
+
+  const { data: existingTodo, error: findError } = await auth.supabase
+    .from("todos")
+    .select("id, image_path")
+    .eq("id", todoId)
+    .eq("user_id", auth.user.id)
+    .single<Pick<Todo, "id" | "image_path">>();
+
+  if (findError || !existingTodo) {
+    return NextResponse.json({ error: "対象が見つかりません。" }, { status: 404 });
   }
 
   const updates: TodoUpdate = {};
   const title = readOptionalTextUpdate(body, "title");
   const url = readOptionalTextUpdate(body, "url");
-  const imageUrl = readOptionalTextUpdate(body, "image_url");
   const imagePath = readOptionalTextUpdate(body, "image_path");
   const memo = readOptionalTextUpdate(body, "memo");
   const category = readOptionalTextUpdate(body, "category");
@@ -125,21 +139,11 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
   const desireLevel = readOptionalDesireLevelUpdate(body);
 
   if (title === "") {
-    return NextResponse.json({ error: "title is required." }, { status: 400 });
+    return NextResponse.json({ error: "商品名を入力してください。" }, { status: 400 });
   }
 
-  if (
-    title === null ||
-    url === null ||
-    imageUrl === null ||
-    imagePath === null ||
-    memo === null ||
-    category === null
-  ) {
-    return NextResponse.json(
-      { error: "Text fields must be strings." },
-      { status: 400 },
-    );
+  if (title === null || url === null || imagePath === null || memo === null || category === null) {
+    return NextResponse.json({ error: "入力内容が正しくありません。" }, { status: 400 });
   }
 
   if (typeof title === "string") {
@@ -150,11 +154,14 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
     updates.url = url || null;
   }
 
-  if (typeof imageUrl === "string") {
-    updates.image_url = imageUrl || null;
-  }
-
   if (typeof imagePath === "string") {
+    const isExistingImage = imagePath === (existingTodo.image_path ?? "");
+    const isNewUserImage = imagePath.startsWith(`${auth.user.id}/`);
+
+    if (imagePath && !isExistingImage && !isNewUserImage) {
+      return NextResponse.json({ error: "画像の指定が正しくありません。" }, { status: 400 });
+    }
+
     updates.image_path = imagePath || null;
   }
 
@@ -167,10 +174,7 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
   }
 
   if (typeof price === "number" && Number.isNaN(price)) {
-    return NextResponse.json(
-      { error: "price must be a positive integer." },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "価格は0以上の整数で入力してください。" }, { status: 400 });
   }
 
   if (price !== undefined && !Number.isNaN(price)) {
@@ -179,7 +183,7 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
 
   if (typeof desireLevel === "number" && Number.isNaN(desireLevel)) {
     return NextResponse.json(
-      { error: "desire_level must be an integer between 1 and 5." },
+      { error: "欲しいレベルは1から5で入力してください。" },
       { status: 400 },
     );
   }
@@ -191,7 +195,7 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
   if ("completed" in body) {
     if (typeof body.completed !== "boolean") {
       return NextResponse.json(
-        { error: "completed must be a boolean." },
+        { error: "購入状態の指定が正しくありません。" },
         { status: 400 },
       );
     }
@@ -201,23 +205,24 @@ export async function PATCH(request: Request, { params }: TodoRouteContext) {
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json(
-      { error: "At least one field is required." },
+      { error: "更新する内容を入力してください。" },
       { status: 400 },
     );
   }
 
-  const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
+  const { data, error } = await auth.supabase
     .from("todos")
     .update(updates)
     .eq("id", todoId)
+    .eq("user_id", auth.user.id)
     .select("*")
     .single<Todo>();
 
   if (error) {
-    const status = error.code === "PGRST116" ? 404 : 500;
-
-    return NextResponse.json({ error: error.message }, { status });
+    return NextResponse.json(
+      { error: "欲しいものを更新できませんでした。" },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json(data);

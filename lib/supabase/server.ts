@@ -1,20 +1,46 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-export function createSupabaseServerClient() {
+function getSupabasePublicConfig() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
+  const supabasePublishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!supabaseUrl) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL is not set.");
+  if (!supabaseUrl || !supabasePublishableKey) {
+    throw new Error("Supabaseの公開設定が不足しています。");
   }
 
-  if (!supabaseSecretKey) {
-    throw new Error("SUPABASE_SECRET_KEY is not set.");
-  }
+  return { supabasePublishableKey, supabaseUrl };
+}
 
-  return createClient(supabaseUrl, supabaseSecretKey, {
-    auth: {
-      persistSession: false,
+export async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
+  const { supabasePublishableKey, supabaseUrl } = getSupabasePublicConfig();
+
+  return createServerClient(supabaseUrl, supabasePublishableKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, options, value }) =>
+            cookieStore.set(name, value, options),
+          );
+        } catch {
+          // Proxyでセッションを更新するため、Server Componentからの書き込みは不要です。
+        }
+      },
     },
   });
+}
+
+export async function getAuthenticatedUser() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  return { error, supabase, user };
 }

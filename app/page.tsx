@@ -271,7 +271,6 @@ const optimizedImageQuality = 0.85;
 
 type UploadedWishlistImage = {
   imagePath: string;
-  imageUrl: string;
 };
 
 function getOptimizedImageFileName(fileName: string) {
@@ -371,15 +370,10 @@ async function uploadWishlistImage(file: File) {
 
   if (
     isRecord(result) &&
-    "image_url" in result &&
-    typeof result.image_url === "string" &&
     "image_path" in result &&
     typeof result.image_path === "string"
   ) {
-    return {
-      imagePath: result.image_path,
-      imageUrl: result.image_url,
-    } satisfies UploadedWishlistImage;
+    return { imagePath: result.image_path } satisfies UploadedWishlistImage;
   }
 
   throw new Error("画像のアップロードに失敗しました。");
@@ -625,14 +619,12 @@ export default function Home() {
     setErrorMessage("");
 
     try {
-      let imageUrl = form.imageUrl;
       let imagePath = form.imagePath;
 
       if (imageFile) {
         setUploadingImageId("new");
         const uploadedImage = await uploadWishlistImage(imageFile);
         imagePath = uploadedImage.imagePath;
-        imageUrl = uploadedImage.imageUrl;
       }
 
       const response = await fetch("/api/todos", {
@@ -640,7 +632,6 @@ export default function Home() {
           category: form.category.trim(),
           desire_level: desireLevel,
           image_path: imagePath,
-          image_url: imageUrl,
           memo: form.memo.trim(),
           price: form.price.trim(),
           title: trimmedTitle,
@@ -748,14 +739,12 @@ export default function Home() {
     setErrorMessage("");
 
     try {
-      let imageUrl = editForm.imageUrl;
       let imagePath = editForm.imagePath;
 
       if (editImageFile) {
         setUploadingImageId(editingId);
         const uploadedImage = await uploadWishlistImage(editImageFile);
         imagePath = uploadedImage.imagePath;
-        imageUrl = uploadedImage.imageUrl;
       }
 
       const response = await fetch(
@@ -765,7 +754,6 @@ export default function Home() {
             category: editForm.category.trim(),
             desire_level: editDesireLevel,
             image_path: imagePath,
-            image_url: imageUrl,
             memo: editForm.memo.trim(),
             price: editForm.price.trim(),
             title: trimmedEditTitle,
