@@ -14,6 +14,10 @@ function getSupabasePublicConfig() {
 }
 
 export async function createSupabaseServerClient() {
+  if (process.env.NODE_ENV === "development") {
+    throw new Error("ローカルモックではSupabase APIを使用できません。");
+  }
+
   const cookieStore = await cookies();
   const { supabasePublishableKey, supabaseUrl } = getSupabasePublicConfig();
 

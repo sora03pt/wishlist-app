@@ -4,20 +4,38 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  clearMockSession,
+  getMockSession,
+  isLocalMockMode,
+} from "@/lib/mock/auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function SessionControls() {
   const pathname = usePathname();
   const router = useRouter();
-  const supabaseRef = useRef<ReturnType<typeof createSupabaseBrowserClient> | null>(
-    null,
-  );
+  const supabaseRef = useRef<ReturnType<
+    typeof createSupabaseBrowserClient
+  > | null>(null);
   const [email, setEmail] = useState("");
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (pathname === "/login" || pathname.startsWith("/auth/")) {
+      return;
+    }
+
+    if (isLocalMockMode) {
+      const session = getMockSession();
+
+      if (!session) {
+        router.replace("/login");
+        router.refresh();
+        return;
+      }
+
+      queueMicrotask(() => setEmail(session.email));
       return;
     }
 
@@ -49,9 +67,20 @@ export function SessionControls() {
   }
 
   async function handleSignOut() {
+    if (isSigningOut) {
+      return;
+    }
+
+    if (isLocalMockMode) {
+      clearMockSession();
+      router.replace("/login");
+      router.refresh();
+      return;
+    }
+
     const supabase = supabaseRef.current;
 
-    if (!supabase || isSigningOut) {
+    if (!supabase) {
       return;
     }
 
