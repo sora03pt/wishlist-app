@@ -1,6 +1,6 @@
 # wishlist-app
 
-欲しいものを登録して購入状況を管理する Next.js のWebアプリです。Supabase Authを利用し、ログインしたユーザーごとにデータと画像を分離します。
+欲しいものを登録して購入状況を管理する Next.js のWebアプリです。本番環境ではSupabase Authを利用し、ログインしたユーザーごとにデータと画像を分離します。
 
 ## 技術スタック
 
@@ -18,7 +18,7 @@
 npm install
 ```
 
-`.env.local` に以下の環境変数を設定します。値そのものはリポジトリへ登録しないでください。
+本番ビルドまたはVercelでSupabaseへ接続する場合は、`.env.local` またはVercelのEnvironment Variablesに以下を設定します。値そのものはリポジトリへ登録しないでください。
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
@@ -27,17 +27,27 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
 `SUPABASE_SECRET_KEY` はこのアプリの通常動作には使用しません。Service Role Keyを設定する場合でも、`NEXT_PUBLIC_` を付けず、クライアントコードへ渡さないでください。
 
-Vercelへデプロイする場合も、同じ公開環境変数をVercelのEnvironment Variablesへ設定します。
-
 ## 開発サーバーの起動
 
 ```bash
 npm run dev
 ```
 
-起動後は http://localhost:3000 を開きます。未ログインの場合はログイン画面へ移動します。
+起動後は http://localhost:3000 を開きます。
 
-## 新規登録とログイン
+### ローカルモック
+
+`npm run dev` で動く開発環境は、Supabase Auth / Database / Storageへ接続しません。ログイン情報、欲しいもの、圧縮後の画像はブラウザの `localStorage` にだけ保存されるため、本番データは更新されません。
+
+- `@` を含むメールアドレスと8文字以上のパスワードで疑似ログインできます。
+- ローカルでは「ログイン」と「新規登録」はどちらも疑似セッションを作成します。確認メールは送信されません。
+- 欲しいものは疑似ログインしたメールアドレスごとに分離されます。
+- リロード後も同じブラウザでは疑似セッションとデータが維持されます。
+- ブラウザのサイトデータを削除すると、ローカルの疑似データも削除されます。
+
+`npm run build` で作成する本番ビルドとVercelデプロイでは、既存のSupabase Auth / Database / Storageを使用します。
+
+## 本番環境の新規登録とログイン
 
 1. `/login` で「新規登録」を選び、メールアドレスと8文字以上のパスワードを入力します。
 2. Supabase Authでメール確認を有効にしている場合は、届いた確認メール内のリンクを開きます。

@@ -39,6 +39,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { isLocalMockMode } from "@/lib/mock/auth";
+import {
+  createMockWishlistItem,
+  deleteMockWishlistItem,
+  getMockWishlistItems,
+  readMockImage,
+  updateMockWishlistItem,
+  type MockWishlistInput,
+} from "@/lib/mock/wishlist";
 
 type WishlistItem = {
   id: number | string;
@@ -209,13 +218,18 @@ async function readJsonResponse(
 }
 
 async function requestWishlistItems() {
-  const response = await fetch("/api/todos", {
-    cache: "no-store",
-  });
-  const result = await readJsonResponse(
-    response,
-    "欲しいものリストの取得に失敗しました。",
-  );
+  const result = isLocalMockMode
+    ? getMockWishlistItems()
+    : await (async () => {
+        const response = await fetch("/api/todos", {
+          cache: "no-store",
+        });
+
+        return readJsonResponse(
+          response,
+          "欲しいものリストの取得に失敗しました。",
+        );
+      })();
 
   const wishlistItems = Array.isArray(result)
     ? result.flatMap((value) => {
@@ -356,6 +370,12 @@ async function optimizeWishlistImage(file: File) {
 }
 
 async function uploadWishlistImage(file: File) {
+  if (isLocalMockMode) {
+    return {
+      imagePath: await readMockImage(file),
+    } satisfies UploadedWishlistImage;
+  }
+
   const formData = new FormData();
   formData.append("file", file);
 
@@ -377,6 +397,85 @@ async function uploadWishlistImage(file: File) {
   }
 
   throw new Error("画像のアップロードに失敗しました。");
+}
+
+async function createWishlistItem(input: MockWishlistInput) {
+  if (isLocalMockMode) {
+    createMockWishlistItem(input);
+    return;
+  }
+
+  const response = await fetch("/api/todos", {
+    body: JSON.stringify(input),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+
+  await readJsonResponse(response, "欲しいものの登録に失敗しました。");
+}
+
+async function setWishlistItemCompleted(
+  itemId: WishlistItem["id"],
+  completed: boolean,
+) {
+  if (isLocalMockMode) {
+    updateMockWishlistItem(itemId, { completed });
+    return;
+  }
+
+  const response = await fetch(
+    `/api/todos/${encodeURIComponent(String(itemId))}`,
+    {
+      body: JSON.stringify({ completed }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "PATCH",
+    },
+  );
+
+  await readJsonResponse(response, "購入状態の更新に失敗しました。");
+}
+
+async function removeWishlistItem(itemId: WishlistItem["id"]) {
+  if (isLocalMockMode) {
+    deleteMockWishlistItem(itemId);
+    return;
+  }
+
+  const response = await fetch(
+    `/api/todos?id=${encodeURIComponent(String(itemId))}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  await readJsonResponse(response, "欲しいものの削除に失敗しました。");
+}
+
+async function saveWishlistItem(
+  itemId: WishlistItem["id"],
+  input: MockWishlistInput,
+) {
+  if (isLocalMockMode) {
+    updateMockWishlistItem(itemId, input);
+    return;
+  }
+
+  const response = await fetch(
+    `/api/todos/${encodeURIComponent(String(itemId))}`,
+    {
+      body: JSON.stringify(input),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "PATCH",
+    },
+  );
+
+  await readJsonResponse(response, "欲しいものの更新に失敗しました。");
 }
 
 function createWishlistFormFromItem(item: WishlistItem): WishlistForm {
@@ -627,23 +726,17 @@ export default function Home() {
         imagePath = uploadedImage.imagePath;
       }
 
-      const response = await fetch("/api/todos", {
-        body: JSON.stringify({
-          category: form.category.trim(),
-          desire_level: desireLevel,
-          image_path: imagePath,
-          memo: form.memo.trim(),
-          price: form.price.trim(),
-          title: trimmedTitle,
-          url: form.url.trim(),
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      });
+      const wishlistInput: MockWishlistInput = {
+        category: form.category.trim(),
+        desire_level: desireLevel,
+        image_path: imagePath,
+        memo: form.memo.trim(),
+        price: form.price.trim(),
+        title: trimmedTitle,
+        url: form.url.trim(),
+      };
 
-      await readJsonResponse(response, "欲しいものの登録に失敗しました。");
+      await createWishlistItem(wishlistInput);
 
       setForm(initialForm);
       setImageFile(null);
@@ -670,18 +763,7 @@ export default function Home() {
     setErrorMessage("");
 
     try {
-      const response = await fetch(
-        `/api/todos/${encodeURIComponent(String(item.id))}`,
-        {
-          body: JSON.stringify({ completed: !item.completed }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-          method: "PATCH",
-        },
-      );
-
-      await readJsonResponse(response, "購入状態の更新に失敗しました。");
+      await setWishlistItemCompleted(item.id, !item.completed);
       await fetchWishlistItems();
     } catch (error) {
       setErrorMessage(
@@ -703,14 +785,7 @@ export default function Home() {
     setErrorMessage("");
 
     try {
-      const response = await fetch(
-        `/api/todos?id=${encodeURIComponent(String(itemId))}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      await readJsonResponse(response, "欲しいものの削除に失敗しました。");
+      await removeWishlistItem(itemId);
       await fetchWishlistItems();
     } catch (error) {
       setErrorMessage(
@@ -747,26 +822,17 @@ export default function Home() {
         imagePath = uploadedImage.imagePath;
       }
 
-      const response = await fetch(
-        `/api/todos/${encodeURIComponent(String(editingId))}`,
-        {
-          body: JSON.stringify({
-            category: editForm.category.trim(),
-            desire_level: editDesireLevel,
-            image_path: imagePath,
-            memo: editForm.memo.trim(),
-            price: editForm.price.trim(),
-            title: trimmedEditTitle,
-            url: editForm.url.trim(),
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-          method: "PATCH",
-        },
-      );
+      const wishlistInput: MockWishlistInput = {
+        category: editForm.category.trim(),
+        desire_level: editDesireLevel,
+        image_path: imagePath,
+        memo: editForm.memo.trim(),
+        price: editForm.price.trim(),
+        title: trimmedEditTitle,
+        url: editForm.url.trim(),
+      };
 
-      await readJsonResponse(response, "欲しいものの更新に失敗しました。");
+      await saveWishlistItem(editingId, wishlistInput);
 
       setEditingId(null);
       setEditForm(initialForm);

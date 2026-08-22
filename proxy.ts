@@ -16,6 +16,10 @@ function redirectWithSessionCookies(
 }
 
 export async function proxy(request: NextRequest) {
+  if (process.env.NODE_ENV === "development") {
+    return NextResponse.next();
+  }
+
   const { response, userId } = await updateSession(request);
   const { pathname } = request.nextUrl;
   const isAuthPage = pathname === "/login" || pathname.startsWith("/auth/");

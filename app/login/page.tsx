@@ -3,8 +3,10 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, LogIn, UserPlus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { isLocalMockMode, setMockSession } from "@/lib/mock/auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthMode = "sign-in" | "sign-up";
@@ -44,6 +46,13 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
+      if (isLocalMockMode) {
+        setMockSession(normalizedEmail);
+        router.replace("/");
+        router.refresh();
+        return;
+      }
+
       const supabase = createSupabaseBrowserClient();
 
       if (mode === "sign-in") {
@@ -104,12 +113,22 @@ export default function LoginPage() {
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-md items-center">
         <Card className="w-full">
           <CardHeader>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-pink-500">
-              Wishlist
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-pink-500">
+                Wishlist
+              </p>
+              {isLocalMockMode ? (
+                <Badge variant="lavender">ローカルモック</Badge>
+              ) : null}
+            </div>
             <CardTitle className="mt-2 text-2xl text-zinc-700">
               {isSignIn ? "ログイン" : "新規登録"}
             </CardTitle>
+            {isLocalMockMode ? (
+              <p className="mt-2 text-sm leading-6 text-zinc-500">
+                開発用の疑似認証です。入力内容はSupabaseへ送信されません。
+              </p>
+            ) : null}
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 rounded-xl border border-pink-100 bg-pink-50/60 p-1">
