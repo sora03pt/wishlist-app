@@ -10,7 +10,7 @@ export function WishlistPage() {
   const wishlist = useWishlistController();
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#fff1f7,transparent_34%),linear-gradient(135deg,#fffafb_0%,#fbf7ff_48%,#ffffff_100%)] text-zinc-950">
+    <main className="app-canvas min-h-screen text-foreground">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 lg:py-10">
         <WishlistSummary
           itemCount={wishlist.items.length}

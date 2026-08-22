@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl text-sm font-semibold transition disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 outline-none focus-visible:ring-4 focus-visible:ring-pink-100",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control text-sm font-semibold transition disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 outline-none focus-visible:ring-4 focus-visible:ring-focus",
   {
     defaultVariants: {
       size: "default",
@@ -17,17 +17,16 @@ const buttonVariants = cva(
         sm: "h-9 rounded-xl px-3",
       },
       variant: {
-        default:
-          "bg-zinc-950 text-white shadow-sm hover:bg-zinc-800",
+        default: "bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover",
         destructive:
-          "border border-rose-200 bg-white text-rose-700 hover:bg-rose-50",
-        ghost: "text-zinc-700 hover:bg-pink-50",
+          "border border-destructive-border bg-surface text-destructive hover:bg-destructive-surface",
+        ghost: "text-foreground hover:bg-accent",
         outline:
-          "border border-pink-200 bg-white/80 text-zinc-800 shadow-sm hover:bg-pink-50",
+          "border border-border-strong bg-surface/80 text-foreground shadow-sm hover:bg-accent",
         secondary:
-          "bg-lavender-100 text-zinc-800 hover:bg-lavender-200",
+          "bg-selected text-foreground hover:bg-selected-border",
         soft:
-          "border border-pink-200 bg-pink-100 text-pink-900 hover:bg-pink-200",
+          "border border-accent-border bg-accent-strong text-accent-foreground hover:bg-accent-hover",
       },
     },
   },

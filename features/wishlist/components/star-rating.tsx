@@ -32,8 +32,8 @@ export function StarRating({
             aria-label={`${level}つ星`}
             className={`size-10 rounded-full p-0 ${
               isSelected
-                ? "text-pink-500 hover:text-pink-600"
-                : "text-pink-200 hover:text-pink-300"
+                ? "text-accent-emphasis hover:text-accent-foreground"
+                : "text-accent-border hover:text-accent-emphasis"
             }`}
             disabled={disabled}
             key={level}
@@ -48,7 +48,7 @@ export function StarRating({
           </Button>
         );
       })}
-      <span className="ml-2 text-sm font-bold text-lavender-700">
+      <span className="ml-2 text-sm font-bold text-selected-foreground">
         {value} / 5
       </span>
     </div>
@@ -62,7 +62,7 @@ export function StarRatingDisplay({ value }: { value: number | null }) {
     return (
       <span
         aria-label="欲しい度 未設定"
-        className="inline-flex items-center gap-0.5 text-zinc-300"
+        className="inline-flex items-center gap-0.5 text-muted-foreground/40"
       >
         {[1, 2, 3, 4, 5].map((level) => (
           <Star key={level} size={17} />
@@ -74,11 +74,13 @@ export function StarRatingDisplay({ value }: { value: number | null }) {
   return (
     <span
       aria-label={formatDesireLevel(desireLevel)}
-      className="inline-flex items-center gap-0.5 text-pink-500"
+      className="inline-flex items-center gap-0.5 text-accent-emphasis"
     >
       {[1, 2, 3, 4, 5].map((level) => (
         <Star
-          className={level <= desireLevel ? "fill-current" : "text-pink-200"}
+          className={
+            level <= desireLevel ? "fill-current" : "text-accent-border"
+          }
           key={level}
           size={17}
         />

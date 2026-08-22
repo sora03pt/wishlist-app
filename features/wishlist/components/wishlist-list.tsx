@@ -57,7 +57,7 @@ export function WishlistList({
           <div className="flex items-center gap-2">
             <CardTitle>欲しいもの一覧</CardTitle>
             {isRefreshing ? (
-              <span className="text-xs font-bold text-zinc-500">
+              <span className="text-xs font-bold text-muted-foreground">
                 再取得中
               </span>
             ) : null}

@@ -3,12 +3,12 @@ import {
   Check,
   ExternalLink,
   Link as LinkIcon,
-  Loader2,
   Pencil,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { StarRatingDisplay } from "@/features/wishlist/components/star-rating";
 import {
   formatCreatedAt,
@@ -46,14 +46,14 @@ export function WishlistCard({
     <Card
       className={
         item.completed
-          ? "border-lavender-200 bg-lavender-100 shadow-[0_14px_40px_rgba(127,90,168,0.08)] transition-colors"
-          : "bg-white/80 shadow-[0_14px_40px_rgba(157,120,137,0.07)] transition-colors"
+          ? "border-selected-border bg-selected shadow-selected transition-colors"
+          : "bg-surface/80 shadow-card transition-colors"
       }
     >
       <CardContent className="p-4 sm:p-5">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 w-full flex-1">
-            <p className="mb-3 text-xs font-medium text-zinc-500">
+            <p className="mb-3 text-xs font-medium text-muted-foreground">
               {formatCreatedAt(item.created_at)}
             </p>
 
@@ -70,22 +70,22 @@ export function WishlistCard({
               ) : null}
 
               <div className="min-w-0 pt-1">
-                <h3 className="break-words text-base font-bold leading-7 text-zinc-950">
+                <h3 className="break-words text-base font-bold leading-7 text-foreground">
                   {item.title}
                 </h3>
               </div>
             </div>
 
-            <dl className="mt-3 grid w-full gap-2 text-sm text-zinc-700">
+            <dl className="mt-3 grid w-full gap-2 text-sm text-foreground/80">
               <div className="flex items-start gap-2">
-                <dt className="w-20 shrink-0 font-bold text-zinc-500">価格</dt>
-                <dd className="min-w-0 font-semibold text-zinc-900">
+                <dt className="w-20 shrink-0 font-bold text-muted-foreground">価格</dt>
+                <dd className="min-w-0 font-semibold text-foreground">
                   {formatPrice(item.price)}
                 </dd>
               </div>
 
               <div className="flex items-start gap-2">
-                <dt className="w-20 shrink-0 font-bold text-zinc-500">
+                <dt className="w-20 shrink-0 font-bold text-muted-foreground">
                   カテゴリ
                 </dt>
                 <dd className="min-w-0 break-words">
@@ -94,7 +94,7 @@ export function WishlistCard({
               </div>
 
               <div className="flex items-start gap-2">
-                <dt className="w-20 shrink-0 font-bold text-zinc-500">
+                <dt className="w-20 shrink-0 font-bold text-muted-foreground">
                   欲しい度
                 </dt>
                 <dd className="min-w-0">
@@ -104,12 +104,12 @@ export function WishlistCard({
 
               {item.url ? (
                 <div className="flex items-start gap-2">
-                  <dt className="w-20 shrink-0 font-bold text-zinc-500">
+                  <dt className="w-20 shrink-0 font-bold text-muted-foreground">
                     商品URL
                   </dt>
                   <dd className="min-w-0">
                     <a
-                      className="inline-flex max-w-full items-center gap-1 break-all font-semibold text-pink-700 underline-offset-4 hover:underline"
+                      className="inline-flex max-w-full items-center gap-1 break-all font-semibold text-accent-foreground underline-offset-4 hover:underline"
                       href={item.url}
                       rel="noreferrer"
                       target="_blank"
@@ -128,7 +128,7 @@ export function WishlistCard({
             <Button
               className={
                 item.completed
-                  ? "border-lavender-300 bg-white text-lavender-700 hover:bg-lavender-50"
+                  ? "border-selected-border bg-surface text-selected-foreground hover:bg-selected-subtle"
                   : undefined
               }
               variant={item.completed ? "outline" : "soft"}
@@ -137,7 +137,7 @@ export function WishlistCard({
               type="button"
             >
               {isUpdating ? (
-                <Loader2 className="animate-spin" size={17} />
+                <LoadingIndicator size={17} />
               ) : (
                 <Check size={17} />
               )}
@@ -162,7 +162,7 @@ export function WishlistCard({
               type="button"
             >
               {isDeleting ? (
-                <Loader2 className="animate-spin" size={17} />
+                <LoadingIndicator size={17} />
               ) : (
                 <Trash2 size={17} />
               )}
@@ -171,8 +171,8 @@ export function WishlistCard({
         </div>
         {item.memo ? (
           <div className="mt-4 grid w-full gap-1">
-            <p className="text-sm font-bold text-zinc-500">メモ</p>
-            <div className="min-w-0 whitespace-pre-wrap break-words rounded-2xl border border-pink-100 bg-white/80 px-4 py-3 text-sm leading-6 text-zinc-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+            <p className="text-sm font-bold text-muted-foreground">メモ</p>
+            <div className="min-w-0 whitespace-pre-wrap break-words rounded-control border border-border bg-surface/80 px-4 py-3 text-sm leading-6 text-foreground/80 shadow-inset">
               {item.memo}
             </div>
           </div>

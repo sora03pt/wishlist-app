@@ -10,10 +10,10 @@ const badgeVariants = cva(
     },
     variants: {
       variant: {
-        default: "bg-zinc-950 text-white",
-        lavender: "bg-violet-100 text-violet-800",
-        outline: "border border-pink-200 bg-white text-zinc-700",
-        pink: "bg-pink-100 text-pink-800",
+        default: "bg-primary text-primary-foreground",
+        lavender: "bg-selected text-selected-foreground",
+        outline: "border border-border-strong bg-surface text-foreground",
+        pink: "bg-accent-strong text-accent-foreground",
         success: "border border-emerald-200 bg-emerald-100 text-emerald-800",
         warning: "border border-amber-200 bg-amber-100 text-amber-800",
       },

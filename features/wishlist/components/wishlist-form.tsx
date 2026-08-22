@@ -1,4 +1,7 @@
 import type { FormEvent, ReactNode } from "react";
+import { FormField, FormLabel } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ImageDropzone } from "@/features/wishlist/components/image-dropzone";
 import { StarRating } from "@/features/wishlist/components/star-rating";
 import { getWishlistCategoryOptions } from "@/features/wishlist/model/wishlist-form";
@@ -42,6 +45,7 @@ export function WishlistForm({
   values,
 }: WishlistFormProps) {
   const isCreate = mode === "create";
+  const fieldPrefix = `${mode}-wishlist`;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,29 +55,26 @@ export function WishlistForm({
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block sm:col-span-2">
-          <span className="text-sm font-semibold text-zinc-800">商品名</span>
-          <input
-            className="mt-2 h-12 w-full rounded-2xl border border-pink-100 bg-white px-4 text-base outline-none transition placeholder:text-zinc-400 focus:ring-4 focus:ring-pink-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
+        <FormField className="sm:col-span-2">
+          <FormLabel htmlFor={`${fieldPrefix}-title`}>商品名</FormLabel>
+          <Input
             disabled={disabled}
+            id={`${fieldPrefix}-title`}
             onChange={(event) => onChange("title", event.target.value)}
             placeholder={
               isCreate ? "例: ノイズキャンセリングイヤホン" : undefined
             }
             value={values.title}
           />
-        </label>
+        </FormField>
 
-        <label className="block">
-          <span className="text-sm font-semibold text-zinc-800">価格</span>
-          <div className={isCreate ? undefined : "relative mt-2"}>
-            <input
-              className={
-                isCreate
-                  ? "mt-2 h-12 w-full rounded-2xl border border-pink-100 bg-white px-4 text-base outline-none transition placeholder:text-zinc-400 focus:ring-4 focus:ring-pink-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
-                  : "h-12 w-full rounded-2xl border border-pink-100 bg-white px-4 pr-11 text-base outline-none transition placeholder:text-zinc-400 focus:ring-4 focus:ring-pink-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
-              }
+        <FormField>
+          <FormLabel htmlFor={`${fieldPrefix}-price`}>価格</FormLabel>
+          <div className={isCreate ? undefined : "relative"}>
+            <Input
+              className={isCreate ? undefined : "pr-11"}
               disabled={disabled}
+              id={`${fieldPrefix}-price`}
               inputMode="numeric"
               min="0"
               onChange={(event) => onChange("price", event.target.value)}
@@ -82,35 +83,36 @@ export function WishlistForm({
               value={values.price}
             />
             {isCreate ? null : (
-              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-500">
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">
                 円
               </span>
             )}
           </div>
-        </label>
+        </FormField>
 
-        <label className="block sm:col-span-2">
-          <span className="text-sm font-semibold text-zinc-800">URL</span>
-          <input
-            className="mt-2 h-12 w-full rounded-2xl border border-pink-100 bg-white px-4 text-base outline-none transition placeholder:text-zinc-400 focus:ring-4 focus:ring-pink-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
+        <FormField className="sm:col-span-2">
+          <FormLabel htmlFor={`${fieldPrefix}-url`}>URL</FormLabel>
+          <Input
             disabled={disabled}
+            id={`${fieldPrefix}-url`}
             onChange={(event) => onChange("url", event.target.value)}
             placeholder={isCreate ? "https://example.com/item" : undefined}
             type="url"
             value={values.url}
           />
-        </label>
+        </FormField>
 
-        <label className="block">
-          <span className="text-sm font-semibold text-zinc-800">
-            カテゴリ
-          </span>
+        <FormField>
+          <FormLabel htmlFor={`${fieldPrefix}-category`}>カテゴリ</FormLabel>
           <Select
             disabled={disabled}
             onValueChange={(value) => onChange("category", value)}
             value={values.category || undefined}
           >
-            <SelectTrigger className={isCreate ? "mt-2" : "mt-2 h-11"}>
+            <SelectTrigger
+              className={isCreate ? undefined : "h-11"}
+              id={`${fieldPrefix}-category`}
+            >
               <SelectValue placeholder="カテゴリを選択" />
             </SelectTrigger>
             <SelectContent>
@@ -121,10 +123,10 @@ export function WishlistForm({
               ))}
             </SelectContent>
           </Select>
-        </label>
+        </FormField>
 
         <div className="sm:col-span-2">
-          <span className="text-sm font-semibold text-zinc-800">
+          <span className="text-sm font-semibold text-foreground">
             欲しいレベル
           </span>
           <StarRating
@@ -144,18 +146,20 @@ export function WishlistForm({
           onRemove={onRemoveImage}
         />
 
-        <label className={isCreate ? "block sm:col-span-2" : "mb-2.5 block sm:col-span-2"}>
-          <span className="text-sm font-semibold text-zinc-800">メモ</span>
-          <textarea
-            className="mt-2 min-h-28 w-full resize-y rounded-2xl border border-pink-100 bg-white px-4 py-3 text-base outline-none transition placeholder:text-zinc-400 focus:ring-4 focus:ring-pink-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
+        <FormField
+          className={isCreate ? "sm:col-span-2" : "mb-2.5 sm:col-span-2"}
+        >
+          <FormLabel htmlFor={`${fieldPrefix}-memo`}>メモ</FormLabel>
+          <Textarea
             disabled={disabled}
+            id={`${fieldPrefix}-memo`}
             onChange={(event) => onChange("memo", event.target.value)}
             placeholder={
               isCreate ? "サイズ、色、比較したいポイントなど" : undefined
             }
             value={values.memo}
           />
-        </label>
+        </FormField>
       </div>
 
       {actions}

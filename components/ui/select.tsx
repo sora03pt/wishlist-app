@@ -19,14 +19,14 @@ function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        "flex h-12 w-full items-center justify-between rounded-2xl border border-pink-100 bg-white px-4 py-2 text-base text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:ring-4 focus:ring-pink-100 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-12 w-full items-center justify-between rounded-control border border-border bg-surface px-4 py-2 text-base text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground focus:ring-4 focus:ring-focus disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
       {...props}
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDown className="text-zinc-500" size={18} />
+        <ChevronDown className="text-muted-foreground" size={18} />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -47,7 +47,7 @@ function SelectContent({
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         className={cn(
-          "relative z-50 max-h-80 min-w-[8rem] overflow-hidden rounded-2xl border border-pink-100 bg-white text-zinc-950 shadow-[0_20px_60px_rgba(99,80,91,0.16)]",
+          "relative z-50 max-h-80 min-w-[8rem] overflow-hidden rounded-control border border-border bg-surface text-foreground shadow-popover",
           className,
         )}
         {...props}
@@ -70,7 +70,7 @@ function SelectItem({
   return (
     <SelectPrimitive.Item
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-xl py-2 pl-9 pr-3 text-sm outline-none focus:bg-pink-50 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default select-none items-center rounded-xl py-2 pl-9 pr-3 text-sm outline-none focus:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
       {...props}

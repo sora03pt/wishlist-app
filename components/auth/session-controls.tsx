@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Loader2, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import {
   clearMockSession,
   getMockSession,
@@ -108,14 +109,14 @@ export function SessionControls() {
     <div className="fixed right-3 top-3 z-50 flex items-center gap-2 sm:right-5 sm:top-5">
       {errorMessage ? (
         <p
-          className="max-w-48 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 shadow-sm"
+          className="max-w-48 rounded-xl border border-destructive-border bg-destructive-surface px-3 py-2 text-xs font-medium text-destructive shadow-sm"
           role="alert"
         >
           {errorMessage}
         </p>
       ) : null}
-      <div className="flex items-center gap-2 rounded-xl border border-pink-100 bg-white/90 p-1.5 shadow-sm backdrop-blur">
-        <span className="hidden max-w-40 truncate px-2 text-xs font-medium text-zinc-600 sm:block">
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-surface/90 p-1.5 shadow-sm backdrop-blur">
+        <span className="hidden max-w-40 truncate px-2 text-xs font-medium text-foreground/70 sm:block">
           {email}
         </span>
         <Button
@@ -128,7 +129,7 @@ export function SessionControls() {
           variant="outline"
         >
           {isSigningOut ? (
-            <Loader2 className="animate-spin" size={16} />
+            <LoadingIndicator size={16} />
           ) : (
             <LogOut size={16} />
           )}

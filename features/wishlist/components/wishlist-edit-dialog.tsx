@@ -1,8 +1,10 @@
-import { Loader2, Save, X } from "lucide-react";
+import { Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -51,19 +53,22 @@ export function WishlistEditDialog({
       <DialogContent>
         <DialogHeader className="pr-14">
           <DialogTitle>欲しいものを編集</DialogTitle>
+          <DialogDescription className="sr-only">
+            {itemTitle}の商品情報を編集します。
+          </DialogDescription>
         </DialogHeader>
         <WishlistForm
           actions={
             <div className="grid grid-cols-2 gap-2">
               <Button
-                className="h-11 bg-zinc-950 hover:bg-zinc-800"
+                className="h-11"
                 disabled={
                   isSaving || isUploadingImage || !values.title.trim()
                 }
                 type="submit"
               >
                 {isSaving || isUploadingImage ? (
-                  <Loader2 className="animate-spin" size={17} />
+                  <LoadingIndicator size={17} />
                 ) : (
                   <Save size={17} />
                 )}

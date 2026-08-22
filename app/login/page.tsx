@@ -2,10 +2,13 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, LogIn, UserPlus } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormField, FormLabel } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import {
   isLocalMockMode,
   registerMockEmail,
@@ -140,29 +143,29 @@ export default function LoginPage() {
   const isSignIn = mode === "sign-in";
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#fff1f7,transparent_34%),linear-gradient(135deg,#fffafb_0%,#fbf7ff_48%,#ffffff_100%)] px-4 py-6 text-zinc-950 sm:px-6 sm:py-10">
+    <main className="app-canvas min-h-screen px-4 py-6 text-foreground sm:px-6 sm:py-10">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-md items-center">
         <Card className="w-full">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-pink-500">
+              <p className="text-xs font-bold uppercase text-accent-emphasis">
                 Wishlist
               </p>
               {isLocalMockMode ? (
                 <Badge variant="lavender">ローカルモック</Badge>
               ) : null}
             </div>
-            <CardTitle className="mt-2 text-2xl text-zinc-700">
+            <CardTitle className="mt-2 text-2xl text-foreground/80">
               {isSignIn ? "ログイン" : "新規登録"}
             </CardTitle>
             {isLocalMockMode ? (
-              <p className="mt-2 text-sm leading-6 text-zinc-500">
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 開発用の疑似認証です。入力内容はSupabaseへ送信されません。
               </p>
             ) : null}
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 rounded-xl border border-pink-100 bg-pink-50/60 p-1">
+            <div className="grid grid-cols-2 rounded-xl border border-border bg-accent/60 p-1">
               <Button
                 className="rounded-lg"
                 onClick={() => changeMode("sign-in")}
@@ -182,39 +185,35 @@ export default function LoginPage() {
             </div>
 
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-              <label className="block">
-                <span className="text-sm font-semibold text-zinc-800">
-                  メールアドレス
-                </span>
-                <input
+              <FormField>
+                <FormLabel htmlFor="auth-email">メールアドレス</FormLabel>
+                <Input
                   autoComplete="email"
-                  className="mt-2 h-12 w-full rounded-2xl border border-pink-100 bg-white px-4 text-base outline-none transition placeholder:text-zinc-400 focus:ring-4 focus:ring-pink-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
                   disabled={isSubmitting}
+                  id="auth-email"
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@example.com"
                   type="email"
                   value={email}
                 />
-              </label>
+              </FormField>
 
-              <label className="block">
-                <span className="text-sm font-semibold text-zinc-800">
-                  パスワード
-                </span>
-                <input
+              <FormField>
+                <FormLabel htmlFor="auth-password">パスワード</FormLabel>
+                <Input
                   autoComplete={isSignIn ? "current-password" : "new-password"}
-                  className="mt-2 h-12 w-full rounded-2xl border border-pink-100 bg-white px-4 text-base outline-none transition placeholder:text-zinc-400 focus:ring-4 focus:ring-pink-100 disabled:cursor-not-allowed disabled:bg-zinc-50"
                   disabled={isSubmitting}
+                  id="auth-password"
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="8文字以上"
                   type="password"
                   value={password}
                 />
-              </label>
+              </FormField>
 
               {errorMessage ? (
                 <p
-                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-3 text-sm font-medium leading-6 text-rose-700"
+                  className="rounded-xl border border-destructive-border bg-destructive-surface px-3 py-3 text-sm font-medium leading-6 text-destructive"
                   role="alert"
                 >
                   {errorMessage}
@@ -222,18 +221,18 @@ export default function LoginPage() {
               ) : null}
 
               {noticeMessage ? (
-                <p className="rounded-xl border border-lavender-200 bg-lavender-50 px-3 py-3 text-sm font-medium leading-6 text-lavender-700">
+                <p className="rounded-xl border border-selected-border bg-selected-subtle px-3 py-3 text-sm font-medium leading-6 text-selected-foreground">
                   {noticeMessage}
                 </p>
               ) : null}
 
               <Button
-                className="h-12 w-full rounded-2xl bg-zinc-950 text-base hover:bg-zinc-800"
+                className="h-12 w-full text-base"
                 disabled={isSubmitting}
                 type="submit"
               >
                 {isSubmitting ? (
-                  <Loader2 className="animate-spin" size={19} />
+                  <LoadingIndicator size={19} />
                 ) : isSignIn ? (
                   <LogIn size={19} />
                 ) : (

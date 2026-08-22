@@ -30,7 +30,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       className={cn(
-        "fixed inset-0 z-50 bg-zinc-950/30 backdrop-blur-sm",
+        "fixed inset-0 z-50 bg-primary/30 backdrop-blur-sm",
         className,
       )}
       {...props}
@@ -48,13 +48,13 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed left-1/2 top-1/2 z-50 grid max-h-[88vh] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_26px_80px_rgba(99,80,91,0.18)] outline-none sm:p-6",
+          "fixed left-1/2 top-1/2 z-50 grid max-h-[88vh] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto rounded-overlay border border-border bg-surface p-5 shadow-overlay outline-none sm:p-6",
           className,
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute right-4 top-4 inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition hover:bg-pink-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pink-100">
+        <DialogPrimitive.Close className="absolute right-4 top-4 inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-focus">
           <X size={17} />
           <span className="sr-only">閉じる</span>
         </DialogPrimitive.Close>
@@ -78,10 +78,29 @@ function DialogTitle({
 }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
-      className={cn("text-xl font-semibold text-zinc-950", className)}
+      className={cn("text-xl font-semibold text-foreground", className)}
       {...props}
     />
   );
 }
 
-export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger };
+function DialogDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description
+      className={cn("text-sm leading-6 text-muted-foreground", className)}
+      {...props}
+    />
+  );
+}
+
+export {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+};

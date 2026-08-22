@@ -1,6 +1,7 @@
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { WishlistForm } from "@/features/wishlist/components/wishlist-form";
 import type {
   UpdateWishlistForm,
@@ -36,12 +37,12 @@ export function WishlistCreatePanel({
         <WishlistForm
           actions={
             <Button
-              className="mt-5 h-12 w-full rounded-2xl bg-zinc-950 text-base hover:bg-zinc-800"
+              className="mt-5 h-12 w-full text-base"
               disabled={!canSubmit}
               type="submit"
             >
               {isSubmitting ? (
-                <Loader2 className="animate-spin" size={19} />
+                <LoadingIndicator size={19} />
               ) : (
                 <Plus size={19} />
               )}
