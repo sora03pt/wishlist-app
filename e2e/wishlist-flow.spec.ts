@@ -48,10 +48,14 @@ test("キーボード入力を含むWishlistの主要CRUDを完了できる", as
   await expect(page.getByText("4 / 5", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "追加する" }).click();
-  await expect(page.getByRole("button", { name: "登録中" })).toBeDisabled();
-  await expect(
-    page.getByRole("status").filter({ hasText: "欲しいものを登録しています。" }),
-  ).toBeAttached();
+  await Promise.all([
+    expect(page.getByRole("button", { name: "登録中" })).toBeDisabled(),
+    expect(
+      page
+        .getByRole("status")
+        .filter({ hasText: "欲しいものを登録しています。" }),
+    ).toBeAttached(),
+  ]);
 
   let item = page.getByRole("listitem").filter({ hasText: originalTitle });
   await expect(item).toBeVisible();
@@ -86,12 +90,14 @@ test("キーボード入力を含むWishlistの主要CRUDを完了できる", as
     name: "購入済みにする",
   });
   await purchaseButton.click();
-  await expect(purchaseButton).toBeDisabled();
-  await expect(
-    page.getByRole("status").filter({
-      hasText: `${updatedTitle}を購入済みに更新しています。`,
-    }),
-  ).toBeAttached();
+  await Promise.all([
+    expect(purchaseButton).toBeDisabled(),
+    expect(
+      page.getByRole("status").filter({
+        hasText: `${updatedTitle}を購入済みに更新しています。`,
+      }),
+    ).toBeAttached(),
+  ]);
   await expect(
     item.getByRole("button", { name: "未購入に戻す" }),
   ).toBeEnabled();
@@ -100,10 +106,14 @@ test("キーボード入力を含むWishlistの主要CRUDを完了できる", as
     name: `${updatedTitle}を削除`,
   });
   await deleteButton.click();
-  await expect(deleteButton).toBeDisabled();
-  await expect(
-    page.getByRole("status").filter({ hasText: `${updatedTitle}を削除しています。` }),
-  ).toBeAttached();
+  await Promise.all([
+    expect(deleteButton).toBeDisabled(),
+    expect(
+      page
+        .getByRole("status")
+        .filter({ hasText: `${updatedTitle}を削除しています。` }),
+    ).toBeAttached(),
+  ]);
   await expect(item).toBeHidden();
   await expect(page.getByText("欲しいものがまだありません。"))
     .toBeVisible();
