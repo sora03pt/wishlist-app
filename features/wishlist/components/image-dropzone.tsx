@@ -94,7 +94,7 @@ export function ImageDropzone({
             <span className="text-sm font-bold" id={instructionId}>
               画像をドラッグ&ドロップ、またはタップして選択
             </span>
-            <span className="text-xs font-medium text-muted-foreground">
+            <span className="text-xs font-medium text-foreground/75">
               PNG / JPG / WebP / GIF、20MBまで
             </span>
           </>

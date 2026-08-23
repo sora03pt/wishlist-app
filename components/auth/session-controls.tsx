@@ -106,7 +106,10 @@ export function SessionControls() {
   }
 
   return (
-    <div className="fixed right-3 top-3 z-50 flex items-center gap-2 sm:right-5 sm:top-5">
+    <aside
+      aria-label="アカウント操作"
+      className="fixed right-3 top-3 z-50 flex items-center gap-2 sm:right-5 sm:top-5"
+    >
       {errorMessage ? (
         <p
           className="max-w-48 rounded-xl border border-destructive-border bg-destructive-surface px-3 py-2 text-xs font-medium text-destructive shadow-sm"
@@ -136,6 +139,6 @@ export function SessionControls() {
           <span className="hidden sm:inline">ログアウト</span>
         </Button>
       </div>
-    </div>
+    </aside>
   );
 }

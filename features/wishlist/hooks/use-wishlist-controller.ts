@@ -308,9 +308,10 @@ export function useWishlistController() {
         editingId,
         createWishlistInput(editForm.values, imagePath),
       );
+      const didRefresh = await refreshItems(false);
       setEditingId(null);
       editForm.reset();
-      if (await refreshItems(false)) {
+      if (didRefresh) {
         setStatusMessage("欲しいものを更新しました。");
       }
     } catch (error) {

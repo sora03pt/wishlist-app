@@ -32,9 +32,9 @@ export function WishlistCreatePanel({
   values,
 }: WishlistCreatePanelProps) {
   return (
-    <Card aria-labelledby="create-wishlist-title">
+    <Card aria-labelledby="create-wishlist-panel-title">
       <CardContent>
-        <h2 className="sr-only" id="create-wishlist-title">
+        <h2 className="sr-only" id="create-wishlist-panel-title">
           欲しいものを追加
         </h2>
         <WishlistForm
