@@ -12,6 +12,18 @@ import type {
   WishlistItemId,
 } from "@/features/wishlist/types";
 
+const e2eMockDelay = Number(
+  process.env.NEXT_PUBLIC_E2E_MOCK_DELAY_MS ?? "0",
+);
+
+async function runLocalMockAction<T>(action: () => T) {
+  if (Number.isFinite(e2eMockDelay) && e2eMockDelay > 0) {
+    await new Promise((resolve) => window.setTimeout(resolve, e2eMockDelay));
+  }
+
+  return action();
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -96,7 +108,7 @@ function compareWishlistItemsByDesireLevel(
 
 export async function getWishlistItems() {
   const result = isLocalMockMode
-    ? getMockWishlistItems()
+    ? await runLocalMockAction(getMockWishlistItems)
     : await (async () => {
         const response = await fetch("/api/todos", { cache: "no-store" });
         return readJsonResponse(
@@ -117,7 +129,7 @@ export async function getWishlistItems() {
 
 export async function createWishlistItem(input: WishlistInput) {
   if (isLocalMockMode) {
-    createMockWishlistItem(input);
+    await runLocalMockAction(() => createMockWishlistItem(input));
     return;
   }
 
@@ -135,7 +147,7 @@ export async function updateWishlistItem(
   input: WishlistInput,
 ) {
   if (isLocalMockMode) {
-    updateMockWishlistItem(itemId, input);
+    await runLocalMockAction(() => updateMockWishlistItem(itemId, input));
     return;
   }
 
@@ -156,7 +168,9 @@ export async function updateWishlistItemCompleted(
   completed: boolean,
 ) {
   if (isLocalMockMode) {
-    updateMockWishlistItem(itemId, { completed });
+    await runLocalMockAction(() =>
+      updateMockWishlistItem(itemId, { completed }),
+    );
     return;
   }
 
@@ -174,7 +188,7 @@ export async function updateWishlistItemCompleted(
 
 export async function deleteWishlistItem(itemId: WishlistItemId) {
   if (isLocalMockMode) {
-    deleteMockWishlistItem(itemId);
+    await runLocalMockAction(() => deleteMockWishlistItem(itemId));
     return;
   }
 

@@ -146,7 +146,7 @@ export function WishlistForm({
           <Select
             disabled={disabled}
             onValueChange={(value) => onChange("category", value)}
-            value={values.category || undefined}
+            value={values.category}
           >
             <SelectTrigger
               className={isCreate ? undefined : "h-11"}
