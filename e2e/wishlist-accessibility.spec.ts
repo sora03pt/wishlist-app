@@ -34,6 +34,7 @@ test("Wishlistの代表状態にsemantic構造と重大なa11y違反がない", 
   await expectNoAutomatedAccessibilityViolations(page);
 
   await page.getByLabel("商品名").fill("入力中の商品");
+  await page.getByLabel("URL").fill("https://example.com/accessibility");
   await page.getByLabel("メモ").fill("検討中の入力状態");
   await expectNoAutomatedAccessibilityViolations(page);
 
@@ -41,6 +42,12 @@ test("Wishlistの代表状態にsemantic構造と重大なa11y違反がない", 
   await expect(page.getByRole("list")).toBeVisible();
   await expect(page.getByRole("listitem")).toHaveCount(1);
   await expect(item).toBeVisible();
+  await expectNoAutomatedAccessibilityViolations(page);
+
+  await item.getByRole("button", { name: "購入済みにする" }).click();
+  await expect(
+    item.getByRole("button", { name: "未購入に戻す" }),
+  ).toBeEnabled();
   await expectNoAutomatedAccessibilityViolations(page);
 
   await item.getByRole("button", { name: "編集" }).click();

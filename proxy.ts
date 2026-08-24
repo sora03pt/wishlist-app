@@ -16,12 +16,17 @@ function redirectWithSessionCookies(
 }
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (pathname === "/robots.txt") {
+    return NextResponse.next();
+  }
+
   if (process.env.NODE_ENV === "development") {
     return NextResponse.next();
   }
 
   const { response, userId } = await updateSession(request);
-  const { pathname } = request.nextUrl;
   const isAuthPage = pathname === "/login" || pathname.startsWith("/auth/");
   const isApiRoute = pathname.startsWith("/api/");
 

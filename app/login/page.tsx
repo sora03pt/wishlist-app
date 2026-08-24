@@ -14,7 +14,6 @@ import {
   registerMockEmail,
   setMockSession,
 } from "@/lib/mock/auth";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthMode = "sign-in" | "sign-up";
 type AuthErrorTarget = "email" | "form" | "password" | null;
@@ -86,6 +85,9 @@ export default function LoginPage() {
         return;
       }
 
+      const { createSupabaseBrowserClient } = await import(
+        "@/lib/supabase/client"
+      );
       const supabase = createSupabaseBrowserClient();
 
       if (mode === "sign-in") {
