@@ -9,7 +9,7 @@ UIエンジニア / デザインエンジニア向けポートフォリオとし
 | Target | URL |
 | --- | --- |
 | Application | [Vercelで開く](https://my-web-app-lemon-ten.vercel.app/) |
-| Storybook | 未公開。GitHub Pagesへの自動デプロイを用意しており、初回デプロイ成功後に実URLへ更新します。 |
+| Storybook | https://sora03pt.github.io/wishlist-app/ |
 | Repository | [sora03pt/wishlist-app](https://github.com/sora03pt/wishlist-app) |
 
 ### Screenshots
