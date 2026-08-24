@@ -58,7 +58,7 @@ const editValues: WishlistFormValues = {
   category: "インテリア",
   desireLevel: 5,
   imagePath: "",
-  imageUrl: "/window.svg",
+  imageUrl: "./window.svg",
   memo: "部屋の幅を測ってから注文する。",
   price: "24800",
   title: "デスクライト",

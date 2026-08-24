@@ -42,7 +42,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Empty: Story = {};
-export const WithImage: Story = { args: { imageUrl: "/window.svg" } };
+export const WithImage: Story = { args: { imageUrl: "./window.svg" } };
 export const Disabled: Story = { args: { disabled: true } };
 export const Uploading: Story = { args: { isUploading: true } };
 export const MobileWidth: Story = {

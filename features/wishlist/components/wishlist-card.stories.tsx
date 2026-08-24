@@ -9,7 +9,7 @@ const defaultItem = {
   desire_level: 4,
   id: "story-item",
   image_path: null,
-  image_url: "/window.svg",
+  image_url: "./window.svg",
   memo: "色と装着感を店頭で確認してから購入する。",
   price: 39800,
   title: "ノイズキャンセリングイヤホン",
