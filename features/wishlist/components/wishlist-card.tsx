@@ -64,6 +64,7 @@ export function WishlistCard({
                   alt={item.title}
                   className="size-24 shrink-0 rounded-[1.5rem] object-cover sm:size-28"
                   height={112}
+                  sizes="(min-width: 640px) 112px, 96px"
                   src={item.image_url}
                   unoptimized
                   width={112}
@@ -110,7 +111,6 @@ export function WishlistCard({
                   </dt>
                   <dd className="min-w-0">
                     <a
-                      aria-label={`${item.title}の商品ページを新しいタブで開く`}
                       className="inline-flex max-w-full items-center gap-1 break-all font-semibold text-accent-foreground underline-offset-4 hover:underline"
                       href={item.url}
                       rel="noreferrer"
@@ -119,6 +119,9 @@ export function WishlistCard({
                       <LinkIcon aria-hidden="true" className="shrink-0" size={15} />
                       {item.url}
                       <ExternalLink aria-hidden="true" className="shrink-0" size={14} />
+                      <span className="sr-only">
+                        {`（${item.title}の商品ページ、新しいタブで開きます）`}
+                      </span>
                     </a>
                   </dd>
                 </div>

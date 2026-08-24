@@ -38,7 +38,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "商品情報、欲しい度、購入状態、編集・削除操作をまとめるWishlist Feature Componentです。CardやButtonはDesign Systemから利用し、商品フィールドと状態判断はFeature側に残します。",
+          "商品情報、欲しい度、購入状態、編集・削除操作をまとめるWishlist Feature Componentです。CardやButtonはDesign Systemから利用し、商品フィールドと状態判断はFeature側に残します。商品画像は商品を識別する情報として商品名をaltにし、商品URLのアクセシブルネームには画面に見えるURLを含めます。",
       },
     },
   },

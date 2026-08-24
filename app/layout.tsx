@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { SessionControls } from "@/components/auth/session-controls";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,7 +11,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <SessionControls />
         {children}
       </body>
     </html>
